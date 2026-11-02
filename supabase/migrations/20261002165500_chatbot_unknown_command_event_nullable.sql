@@ -1,0 +1,1 @@
+alter table public.chatbot_comando_eventos alter column comando_id drop not null;

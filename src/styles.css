@@ -1,0 +1,346 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Gestor Nexos — design system
+ * Tema escuro SaaS com alternância real para tema claro.
+ */
+
+@theme inline {
+  --font-sans: "Inter", "SF Pro Display", "SF Pro Text", "Segoe UI Variable", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --radius: 1rem;
+  color-scheme: dark;
+
+  /* Base: azul-marinho profundo, com contraste mais limpo e vibrante. */
+  --background: oklch(0.145 0.055 258);
+  --foreground: oklch(0.975 0.01 235);
+
+  --surface: oklch(0.19 0.058 258);
+  --surface-2: oklch(0.225 0.06 257);
+
+  --card: oklch(0.19 0.058 258);
+  --card-foreground: oklch(0.975 0.01 235);
+  --popover: oklch(0.18 0.055 258);
+  --popover-foreground: oklch(0.975 0.01 235);
+
+  /* Azul/ciano da marca com presença, sem excesso de neon. */
+  --primary: oklch(0.73 0.17 224);
+  --primary-foreground: oklch(0.13 0.045 260);
+
+  --secondary: oklch(0.245 0.06 258);
+  --secondary-foreground: oklch(0.95 0.012 235);
+
+  --muted: oklch(0.235 0.05 258);
+  --muted-foreground: oklch(0.735 0.035 244);
+
+  --accent: oklch(0.77 0.155 194);
+  --accent-foreground: oklch(0.13 0.045 260);
+
+  --destructive: oklch(0.655 0.205 22);
+  --destructive-foreground: oklch(0.985 0.008 235);
+
+  --success: oklch(0.735 0.17 158);
+  --success-foreground: oklch(0.13 0.04 260);
+  --warning: oklch(0.81 0.155 82);
+  --warning-foreground: oklch(0.16 0.04 260);
+  --info: oklch(0.735 0.15 235);
+
+  --border: oklch(0.31 0.065 255);
+  --input: oklch(0.285 0.06 257);
+  --ring: oklch(0.73 0.17 224);
+
+  --chart-1: oklch(0.73 0.17 224);
+  --chart-2: oklch(0.77 0.155 194);
+  --chart-3: oklch(0.735 0.17 158);
+  --chart-4: oklch(0.81 0.155 82);
+  --chart-5: oklch(0.68 0.18 287);
+
+  --sidebar: oklch(0.125 0.055 262);
+  --sidebar-foreground: oklch(0.9 0.025 238);
+  --sidebar-primary: oklch(0.73 0.17 224);
+  --sidebar-primary-foreground: oklch(0.13 0.045 260);
+  --sidebar-accent: oklch(0.205 0.065 258);
+  --sidebar-accent-foreground: oklch(0.975 0.01 235);
+  --sidebar-border: oklch(0.255 0.065 258);
+  --sidebar-ring: oklch(0.73 0.17 224);
+}
+
+:root.light {
+  color-scheme: light;
+
+  /* Fundo levemente azulado para separar conteúdo, cards e controles. */
+  --background: oklch(0.965 0.012 245);
+  --foreground: oklch(0.19 0.04 258);
+
+  --surface: oklch(0.985 0.008 245);
+  --surface-2: oklch(0.94 0.018 244);
+
+  --card: oklch(0.995 0.004 245);
+  --card-foreground: oklch(0.19 0.04 258);
+  --popover: oklch(0.995 0.004 245);
+  --popover-foreground: oklch(0.19 0.04 258);
+
+  --primary: oklch(0.59 0.17 224);
+  --primary-foreground: oklch(0.99 0.004 240);
+
+  --secondary: oklch(0.925 0.022 244);
+  --secondary-foreground: oklch(0.235 0.04 258);
+
+  --muted: oklch(0.925 0.018 244);
+  --muted-foreground: oklch(0.46 0.04 250);
+
+  --accent: oklch(0.9 0.045 205);
+  --accent-foreground: oklch(0.21 0.045 250);
+
+  --destructive: oklch(0.56 0.21 25);
+  --destructive-foreground: oklch(0.99 0.004 240);
+
+  --success: oklch(0.54 0.155 158);
+  --success-foreground: oklch(0.99 0.004 240);
+  --warning: oklch(0.68 0.15 80);
+  --warning-foreground: oklch(0.2 0.04 259);
+  --info: oklch(0.58 0.145 235);
+
+  --border: oklch(0.82 0.025 245);
+  --input: oklch(0.80 0.028 245);
+  --ring: oklch(0.59 0.17 224);
+
+  --chart-1: oklch(0.59 0.17 224);
+  --chart-2: oklch(0.61 0.16 190);
+  --chart-3: oklch(0.54 0.155 158);
+  --chart-4: oklch(0.68 0.15 80);
+  --chart-5: oklch(0.56 0.17 285);
+
+  --sidebar: oklch(0.985 0.008 245);
+  --sidebar-foreground: oklch(0.25 0.04 259);
+  --sidebar-primary: oklch(0.59 0.17 224);
+  --sidebar-primary-foreground: oklch(0.99 0.004 240);
+  --sidebar-accent: oklch(0.91 0.032 225);
+  --sidebar-accent-foreground: oklch(0.21 0.045 250);
+  --sidebar-border: oklch(0.82 0.025 245);
+  --sidebar-ring: oklch(0.59 0.17 224);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: oklch(0.43 0.035 250 / 0.7) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: oklch(0.43 0.035 250 / 0.62);
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: oklch(0.52 0.045 230 / 0.8);
+  }
+
+  html,
+  body {
+    min-height: 100%;
+  }
+
+  body {
+    background-color: var(--color-background);
+    background-image:
+      radial-gradient(circle at 8% -8%, oklch(0.47 0.17 244 / 0.16), transparent 31rem),
+      radial-gradient(circle at 94% 0%, oklch(0.48 0.14 195 / 0.08), transparent 28rem),
+      linear-gradient(180deg, oklch(0.155 0.055 258) 0%, var(--color-background) 42%);
+    background-attachment: fixed;
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    transition: background-color 180ms ease, color 180ms ease;
+  }
+
+  ::selection {
+    background: oklch(0.73 0.17 224 / 0.3);
+    color: var(--color-foreground);
+  }
+
+  :focus-visible {
+    outline: none;
+  }
+
+  /* Todo elemento de ação mostra a mão branca do sistema e reage ao passar o mouse. */
+  button:not(:disabled),
+  a[href],
+  [role="button"],
+  label[for],
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  select:not(:disabled),
+  summary {
+    cursor: pointer;
+  }
+
+  button:not(:disabled),
+  a[href],
+  [role="button"] {
+    transition: filter 160ms ease, opacity 160ms ease, transform 160ms ease;
+  }
+
+  button:not(:disabled):hover,
+  a[href]:hover,
+  [role="button"]:hover {
+    filter: brightness(1.12);
+  }
+
+  button:not(:disabled):active,
+  [role="button"]:active {
+    transform: scale(0.98);
+  }
+}
+
+@utility nexos-gradient {
+  background-image: linear-gradient(
+    135deg,
+    oklch(0.72 0.13 220) 0%,
+    oklch(0.78 0.14 195) 100%
+  );
+}
+
+@utility nexos-glow {
+  box-shadow: 0 18px 40px -22px oklch(0.72 0.13 220 / 0.75);
+}
+
+
+@utility nexos-panel {
+  border: 1px solid oklch(0.42 0.075 250 / 0.42);
+  background:
+    linear-gradient(145deg, oklch(0.22 0.062 258 / 0.94), oklch(0.175 0.052 258 / 0.96));
+  box-shadow:
+    0 1px 0 oklch(1 0 0 / 0.035) inset,
+    0 18px 50px -36px oklch(0.02 0.03 260 / 0.95);
+  backdrop-filter: blur(14px);
+}
+
+@utility nexos-elevated {
+  border: 1px solid oklch(0.44 0.085 245 / 0.48);
+  background:
+    linear-gradient(145deg, oklch(0.235 0.07 257 / 0.98), oklch(0.18 0.055 258 / 0.98));
+  box-shadow:
+    0 1px 0 oklch(1 0 0 / 0.045) inset,
+    0 22px 55px -36px oklch(0.02 0.035 260 / 0.98);
+}
+
+@utility nexos-soft-ring {
+  box-shadow: 0 0 0 1px oklch(0.73 0.17 224 / 0.08) inset;
+}
+
+
+/* O tema claro precisa substituir também fundos/elevações que no tema escuro
+ * usam cores fixas. Sem isso, tokens claros ficam sobre gradientes escuros. */
+:root.light body {
+  background-color: var(--color-background);
+  background-image:
+    radial-gradient(circle at 8% -8%, oklch(0.76 0.11 225 / 0.16), transparent 31rem),
+    radial-gradient(circle at 94% 0%, oklch(0.82 0.09 195 / 0.12), transparent 28rem),
+    linear-gradient(180deg, oklch(0.975 0.014 242) 0%, var(--color-background) 46%);
+}
+
+:root.light .nexos-panel {
+  border-color: oklch(0.82 0.03 245 / 0.95);
+  background:
+    linear-gradient(145deg, oklch(0.998 0.003 245 / 0.98), oklch(0.965 0.012 245 / 0.98));
+  box-shadow:
+    0 1px 0 oklch(1 0 0 / 0.9) inset,
+    0 18px 45px -34px oklch(0.35 0.05 250 / 0.28);
+}
+
+:root.light .nexos-elevated {
+  border-color: oklch(0.80 0.035 245 / 0.95);
+  background:
+    linear-gradient(145deg, oklch(1 0 0 / 0.99), oklch(0.95 0.018 245 / 0.99));
+  box-shadow:
+    0 1px 0 oklch(1 0 0 / 0.95) inset,
+    0 22px 50px -34px oklch(0.34 0.06 250 / 0.32);
+}
+
+:root.light .nexos-soft-ring {
+  box-shadow: 0 0 0 1px oklch(0.59 0.17 224 / 0.1) inset;
+}
+
+:root.light input,
+:root.light textarea,
+:root.light select,
+:root.light [role="combobox"] {
+  color: var(--color-foreground);
+}
+
+:root.light input::placeholder,
+:root.light textarea::placeholder {
+  color: var(--color-muted-foreground);
+  opacity: 0.82;
+}

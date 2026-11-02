@@ -1,0 +1,26 @@
+project_id = "tijossaiesxrvivlyojt"
+
+[functions.whatsapp]
+verify_jwt = false
+
+[functions.automacoes]
+verify_jwt = false
+
+
+[functions.whatsapp-transcription-settings]
+verify_jwt = false
+
+[functions.whatsapp-bridge]
+verify_jwt = false
+
+[functions.whatsapp-call-settings]
+verify_jwt = false
+
+[functions.whatsapp-tenant-bridge]
+verify_jwt = false
+
+[functions.chatbot-admin]
+verify_jwt = false
+
+[functions.system-backup]
+verify_jwt = false
