@@ -2826,16 +2826,10 @@ export function ChatbotPage() {
                     : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
                 }`}
               >
-                <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${
-                  tab === "typebot"
-                    ? "bg-sky-500/15 text-sky-400"
-                    : tab === "fluxos"
-                      ? "bg-violet-500/15 text-violet-400"
-                      : tab === "configuracoes"
-                        ? "bg-amber-500/15 text-amber-400"
-                        : tab === "comandos"
-                          ? "bg-cyan-500/15 text-cyan-400"
-                        : "bg-emerald-500/15 text-emerald-400"
+                <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg transition ${
+                  sidebarTab === tab
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted/60 text-muted-foreground"
                 }`}>
                   <Icon className="size-4.5 shrink-0" />
                 </span>
