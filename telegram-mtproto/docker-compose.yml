@@ -1,0 +1,10 @@
+services:
+  telegram-mtproto:
+    build: .
+    container_name: telegram-mtproto
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3003:3003"
+    environment:
+      PORT: "3003"
+      TRANSPORT_TOKEN: ${TRANSPORT_TOKEN}

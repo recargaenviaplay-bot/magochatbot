@@ -1,0 +1,8 @@
+{
+  "name": "telegram-mtproto",
+  "private": true,
+  "type": "module",
+  "main": "index.mjs",
+  "scripts": { "start": "node index.mjs" },
+  "dependencies": { "telegram": "^2.26.22" }
+}
