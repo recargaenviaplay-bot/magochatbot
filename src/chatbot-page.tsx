@@ -38,6 +38,7 @@ import {
   ZoomIn,
   ZoomOut,
   Maximize2,
+  ChevronRight,
 } from "lucide-react";
 
 import { useConfirm } from "@/components/nexos/ConfirmDialog";
@@ -2794,8 +2795,18 @@ export function ChatbotPage() {
         }`}
       >
         <nav className="relative z-20 row-start-1 min-w-0 max-w-full xl:col-start-1 xl:row-start-1">
-          <div className={`sticky top-4 flex w-full max-w-full gap-2 overflow-x-auto overflow-y-hidden rounded-lg border border-border bg-card p-2 shadow-sm xl:flex-col xl:overflow-visible ${workspaceNavCollapsed ? "xl:px-1.5" : ""}`}>
-            <div className="hidden items-center justify-end border-b border-border/70 pb-2 xl:flex">
+          <div className={`sticky top-4 flex w-full max-w-full gap-2 overflow-x-auto overflow-y-hidden rounded-lg border border-sidebar-border bg-sidebar p-3 text-sidebar-foreground xl:flex-col xl:overflow-visible ${workspaceNavCollapsed ? "xl:px-1.5" : ""}`}>
+            <div className="hidden items-center gap-3 border-b border-sidebar-border px-2 pb-3 pt-1 xl:flex">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-sidebar-accent text-sidebar-foreground">
+                <Bot className="size-4.5" />
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold">Mago Chatbot</p>
+                <p className="truncate text-[11px] text-muted-foreground">{config.ativo ? "Bot ativo" : "Bot desativado"}</p>
+              </div>
+            </div>
+            <div className="hidden px-2 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground xl:block">Atendimento</div>
+            <div className="hidden items-center justify-end border-b border-sidebar-border/0 pb-2 xl:flex">
               <button
                 type="button"
                 onClick={toggleWorkspaceNav}
@@ -2820,10 +2831,10 @@ export function ChatbotPage() {
                 type="button"
                 title={label}
                 onClick={() => setSidebarTab(tab)}
-                className={`flex min-h-12 min-w-[150px] shrink-0 items-center gap-3 rounded-md px-3 py-2.5 text-left transition xl:min-w-0 xl:w-full ${workspaceNavCollapsed ? "xl:justify-center xl:px-1" : ""} ${
+                className={`flex min-h-12 min-w-[150px] shrink-0 items-center gap-3 rounded-md px-3 py-2 text-left transition xl:min-w-0 xl:w-full ${workspaceNavCollapsed ? "xl:justify-center xl:px-1" : ""} ${
                   sidebarTab === tab
-                    ? "bg-primary/12 text-primary"
-                    : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
+                    ? "bg-sidebar-accent text-sidebar-foreground"
+                    : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
                 }`}
               >
                 <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg transition ${
@@ -2839,6 +2850,7 @@ export function ChatbotPage() {
                     {description}
                   </span>
                 </span>
+                <ChevronRight className={`ml-auto hidden size-3.5 shrink-0 opacity-50 xl:block ${workspaceNavCollapsed ? "xl:hidden" : ""}`} />
               </button>
             ))}
 
