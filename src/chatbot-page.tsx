@@ -2791,7 +2791,7 @@ export function ChatbotPage() {
         className={`grid min-h-[660px] w-full min-w-0 max-w-full gap-2 xl:gap-3 ${
           workspaceNavCollapsed
             ? "xl:grid-cols-[64px_minmax(0,1fr)]"
-            : "xl:grid-cols-[176px_minmax(0,1fr)]"
+            : "xl:grid-cols-[240px_minmax(0,1fr)]"
         }`}
       >
         <nav className="relative z-20 row-start-1 min-w-0 max-w-full xl:col-start-1 xl:row-start-1">
@@ -2839,14 +2839,14 @@ export function ChatbotPage() {
               >
                 <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg transition ${
                   sidebarTab === tab
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted/60 text-muted-foreground"
+                    ? "bg-sidebar-foreground/10 text-sidebar-foreground"
+                    : "bg-transparent text-muted-foreground"
                 }`}>
                   <Icon className="size-4.5 shrink-0" />
                 </span>
                 <span className={`min-w-0 ${workspaceNavCollapsed ? "xl:hidden" : ""}`}>
                   <span className="block whitespace-nowrap text-sm font-semibold">{label}</span>
-                  <span className="mt-0.5 hidden text-[10px] leading-4 text-muted-foreground xl:block">
+                  <span className="mt-0.5 hidden text-[10px] leading-4 text-muted-foreground">
                     {description}
                   </span>
                 </span>
@@ -2867,7 +2867,7 @@ export function ChatbotPage() {
                 </span>
                 <span className={`min-w-0 ${workspaceNavCollapsed ? "xl:hidden" : ""}`}>
                   <span className="block whitespace-nowrap text-sm font-semibold">Novo fluxo</span>
-                  <span className="mt-0.5 block text-[10px] leading-4 text-muted-foreground">
+                  <span className="mt-0.5 hidden text-[10px] leading-4 text-muted-foreground">
                     Criar um novo atendimento
                   </span>
                 </span>
