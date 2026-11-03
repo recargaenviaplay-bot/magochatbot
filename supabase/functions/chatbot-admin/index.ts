@@ -465,7 +465,7 @@ Deno.serve(async (req) => {
       if(!grupos.length)return json({ok:false,error:"Selecione pelo menos um grupo permitido."},400);
       if(!texto&&!imagem)return json({ok:false,error:"Escreva uma resposta ou anexe uma imagem."},400);
       if(![1,3,5,10].includes(atraso))return json({ok:false,error:"Escolha um atraso válido."},400);
-      if(imagem&&!/^comandos\/[0-9a-f-]+\/(?:[a-zA-Z0-9._-]+)$/.test(imagem))return json({ok:false,error:"Caminho da imagem inválido."},400);
+      if(imagem&&!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\/comandos\/[0-9a-f-]+\/(?:[a-zA-Z0-9._-]+)$/.test(imagem))return json({ok:false,error:"Caminho da imagem inválido."},400);
       if(imagem){
         const {data:media,error:mediaError}=await db.storage.from("mensagens-midia").createSignedUrl(imagem,60);
         if(mediaError||!media?.signedUrl)return json({ok:false,error:"Imagem não encontrada no armazenamento."},400);
