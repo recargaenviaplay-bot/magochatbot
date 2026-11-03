@@ -2640,11 +2640,11 @@ export function ChatbotPage() {
 
   return (
     <>
-      <div className="mb-6 w-full pt-1 md:mb-7 md:pt-5">
-        <div className="border-b border-border/55 pb-4 md:pb-5">
+      <div className="mb-6 w-full pt-1 md:mb-7 md:pt-3">
+        <div className="border-b border-border pb-4">
           <div className="min-w-0">
-            <h1 className="break-words text-[1.75rem] font-semibold leading-none tracking-[-0.035em] text-foreground sm:text-[1.9rem] md:text-[2rem]">Chatbot</h1>
-            <p className="mt-2 max-w-2xl break-words text-[13px] leading-5 text-muted-foreground/75">Crie fluxos visuais de atendimento para o WhatsApp, no estilo Typebot.</p>
+            <h1 className="break-words text-2xl font-semibold tracking-tight text-foreground md:text-[1.6rem]">Chatbot</h1>
+            <p className="mt-1 max-w-2xl break-words text-sm leading-5 text-muted-foreground">Atendimento automático para o WhatsApp.</p>
           </div>
         </div>
         <div className="flex w-full flex-wrap items-center gap-2 pt-4 sm:justify-end">
