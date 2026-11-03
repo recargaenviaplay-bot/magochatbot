@@ -799,11 +799,14 @@ export function ChatbotPage() {
     let uploadedPath="";
     try{
       if(commandImage){
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user?.id) throw new Error("Sua sessão expirou. Entre novamente.");
         if(!["image/jpeg","image/png","image/webp"].includes(commandImage.type))throw new Error("Escolha imagem JPG, PNG ou WEBP.");
         if(commandImage.size>5*1024*1024)throw new Error("Imagem maior que 5 MB.");
         const file=await normalizeImageForWhatsApp(commandImage);
         const ext=file.type==="image/png"?"png":file.type==="image/webp"?"webp":"jpg";
-        uploadedPath=`comandos/${crypto.randomUUID()}/imagem.${ext}`;
+        // O Storage aplica RLS pela primeira pasta: ela precisa ser o UUID do usuário autenticado.
+        uploadedPath=`${user.id}/comandos/${crypto.randomUUID()}/imagem.${ext}`;
         const {error}=await supabase.storage.from("mensagens-midia").upload(uploadedPath,file,{
           upsert:false,contentType:file.type||"image/jpeg",
         });
