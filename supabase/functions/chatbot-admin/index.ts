@@ -340,7 +340,30 @@ Deno.serve(async (req) => {
         });
       }
 
-      const current = await botmgWahaSession();
+      let current = await botmgWahaSession();
+      // Instala o webhook uma única vez, inclusive em números que já estavam conectados antes da atualização.
+      const configuredHooks = Array.isArray(current?.config?.webhooks) ? current.config.webhooks : [];
+      const hookUrl = "https://lfnjsnnjgmsknrywtsyy.supabase.co/functions/v1/chatbot-webhook";
+      const hasBotmgHook = configuredHooks.some((hook: any) => String(hook?.url ?? "") === hookUrl);
+      if (current && !hasBotmgHook) {
+        const existingConfig = current?.config && typeof current.config === "object" ? current.config : {};
+        await botmgWaha(`/api/sessions/${encodeURIComponent(BOTMG_WAHA_SESSION)}`, {
+          method: "PUT",
+          body: JSON.stringify({
+            name: BOTMG_WAHA_SESSION,
+            config: {
+              ...existingConfig,
+              webhooks: [...configuredHooks, {
+                url: hookUrl,
+                events: ["message", "message.ack"],
+                retries: { policy: "linear", delaySeconds: 2, attempts: 5 },
+                customHeaders: [{ name: "x-nexos-chatbot", value: "M4_qrF7ZXBiwtSfg37aZylcyIBJqan0WLMwpBoAETl" }]
+              }]
+            }
+          })
+        });
+        current = await botmgWahaSession();
+      }
       const rawState = String(current?.status ?? "").toUpperCase();
       return json({
         ok: true,
