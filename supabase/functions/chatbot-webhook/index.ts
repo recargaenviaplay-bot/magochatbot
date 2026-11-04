@@ -1311,19 +1311,36 @@ async function runFlow(flow:any,number:string,startBlockId:string|undefined,chat
     if (type === "copy") {
       const copyCode = String(block?.copyCode ?? "").trim();
       if (copyCode) {
-        await send("send-flow-buttons", {
-          number,
-          title: String(block?.title ?? "").trim(),
-          description: String(block?.text ?? block?.description ?? "").trim(),
-          footer: String(block?.footer ?? "").trim(),
-          buttons: [{
-            type: "copy",
-            displayText: String(block?.buttonText ?? "").trim(),
+        const title = String(block?.title ?? "").trim();
+        const description = String(block?.text ?? block?.description ?? "").trim();
+
+        if (runtime.transport === "waha" && runtime.sessionName === "botmg-master") {
+          // O WhatsApp mobile não exibe de forma consistente o botão nativo
+          // de copiar enviado pelo WAHA/NOWEB. Envia a chave como texto comum,
+          // selecionável e copiável em qualquer celular.
+          const message = [
+            title ? `* ${title} *`.replace(/^\*\s|\s\*$/g, "*") : "",
+            description,
+            `*Chave Pix:*`,
             copyCode,
-            id: String(block?.id ?? "copy"),
-          }],
-        });
-        summary.push("[copiar texto]");
+            "Toque e segure a chave para copiar.",
+          ].filter(Boolean).join("\n\n");
+          await send("send-text", { number, text: message });
+        } else {
+          await send("send-flow-buttons", {
+            number,
+            title,
+            description,
+            footer: String(block?.footer ?? "").trim(),
+            buttons: [{
+              type: "copy",
+              displayText: String(block?.buttonText ?? "").trim(),
+              copyCode,
+              id: String(block?.id ?? "copy"),
+            }],
+          });
+        }
+        summary.push(`[chave para copiar: ${copyCode.length} caracteres]`);
       }
       if (await waitForAttachedOptions(block)) return { waiting: true, summary, sentCount };
       blockId = resolveNext(blocks, block);
@@ -2632,7 +2649,7 @@ Deno.serve(async (req) => {
     });
 
     try {
-      const waitMs = Math.max(0, Math.min(30, Number(config.delay_segundos ?? 2))) * 1000;
+      const waitMs = Math.max(0, Math.min(30, Number(config?.delay_segundos ?? 2))) * 1000;
       if (waitMs) await new Promise((resolve) => setTimeout(resolve, waitMs));
       const result=await runFlow(flow,number,undefined,replyJid,runtime);
       if (historyId) {
@@ -2694,7 +2711,7 @@ Deno.serve(async (req) => {
   });
 
   try {
-    const waitMs = Math.max(0, Math.min(30, Number(config.delay_segundos ?? 2))) * 1000;
+    const waitMs = Math.max(0, Math.min(30, Number(config?.delay_segundos ?? 2))) * 1000;
     if (waitMs) await new Promise((resolve) => setTimeout(resolve, waitMs));
     await bridge("send-text",{number,chatId:replyJid,text:responseText},runtime);
     if (historyId) {
