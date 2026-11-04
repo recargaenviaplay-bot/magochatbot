@@ -4,7 +4,7 @@ const LOCAL_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const LOCAL_SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const BRIDGE_URL = LOCAL_URL + "/functions/v1/whatsapp-bridge";
 const WAHA_BRIDGE_URL = LOCAL_URL + "/functions/v1/waha-bridge";
-const MASTER_OWNER_ID = "7b511665-4697-42f3-b82e-a42a431a70ef";
+const MASTER_WAHA_OWNER_ID = "5022df45-e3d8-4a47-8a99-7c7d578e085e";
 const BOTMG_WAHA_URL = (Deno.env.get("BOTMG_WAHA_URL") ?? "").replace(/\\/+$/, "");
 const BOTMG_WAHA_API_KEY = Deno.env.get("BOTMG_WAHA_API_KEY") ?? "";
 const BOTMG_WAHA_SESSION = Deno.env.get("BOTMG_WAHA_SESSION") ?? "botmg-master";
@@ -132,7 +132,7 @@ async function wahaMaster(action: string, payload: Record<string, unknown> = {})
     body: JSON.stringify({
       action,
       ...payload,
-      ownerId: MASTER_OWNER_ID,
+      ownerId: MASTER_WAHA_OWNER_ID,
       sessionName: "nexos_master_primary",
     }),
   });
@@ -277,7 +277,9 @@ Deno.serve(async (req) => {
     return json({ ok: false, error: "Seu plano atual não inclui o Chatbot." }, 403);
   }
 
-  const ownerId = auth.isAdmin ? null : auth.user.id;
+  // Fluxos do Chatbot Master usam o owner_id da sessão WAHA compartilhada.
+  // A consulta anterior por owner_id IS NULL escondia os fluxos já salvos.
+  const ownerId = auth.isAdmin ? MASTER_WAHA_OWNER_ID : auth.user.id;
   const configKey = auth.isAdmin ? "default" : `default:${ownerId}`;
   const scoped = (query: any) =>
     ownerId ? query.eq("owner_id", ownerId) : query.is("owner_id", null);
@@ -438,10 +440,6 @@ Deno.serve(async (req) => {
     }
 
     if (action === "test-group-send") {
-      if (!auth.isAdmin) {
-        return json({ ok: false, error: "Teste de grupo disponível somente no Master." }, 403);
-      }
-
       const chatId = String(body?.chatId ?? body?.groupId ?? "").trim();
       const text = String(body?.text ?? "").trim();
       if (!chatId.endsWith("@g.us")) {
@@ -451,10 +449,15 @@ Deno.serve(async (req) => {
         return json({ ok: false, error: "Digite uma mensagem de teste." }, 400);
       }
 
-      const data = await wahaMaster("send-group-text", { chatId, text });
+      // O BOTMG independente opera como tenant. O envio deve usar a sessão
+      // WAHA vinculada ao usuário autenticado, nunca a sessão do Master.
+      const data = auth.isAdmin
+        ? await wahaMaster("send-group-text", { chatId, text })
+        : await tenantBridge("send-group-text", { chatId, text });
+
       return json({
         ok: true,
-        message: "Teste enviado diretamente para o WhatsApp do Chatbot.",
+        message: "Mensagem de teste enviada para o grupo selecionado.",
         data,
       });
     }
