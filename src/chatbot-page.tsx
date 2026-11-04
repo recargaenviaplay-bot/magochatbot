@@ -38,6 +38,7 @@ import {
   ZoomIn,
   ZoomOut,
   Maximize2,
+  ChevronRight,
 } from "lucide-react";
 
 import { useConfirm } from "@/components/nexos/ConfirmDialog";
@@ -2245,7 +2246,7 @@ export function ChatbotPage() {
     const menuOpen = addMenuBlockId === block.id;
 
     return (
-      <div className="mt-4 rounded-xl border border-dashed border-primary/30 bg-primary/[0.03] p-3">
+      <div className="mt-4 rounded-md border border-dashed border-primary/30 bg-primary/[0.03] p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <p className="text-sm font-semibold">Adicionar algo neste fluxo</p>
@@ -2265,7 +2266,7 @@ export function ChatbotPage() {
         </div>
 
         {menuOpen ? (
-          <div className="mt-3 rounded-xl border border-border bg-background/30 p-3">
+          <div className="mt-3 rounded-md border border-border bg-background/30 p-3">
             <p className="mb-2 text-xs font-medium text-muted-foreground">O que você quer adicionar?</p>
             <div className="flex max-w-full gap-2 overflow-x-auto pb-2 sm:flex-wrap sm:overflow-visible sm:pb-0">
               {([
@@ -2312,7 +2313,7 @@ export function ChatbotPage() {
             </div>
 
             {options.length <= 3 ? (
-              <div className="rounded-xl border border-primary/20 bg-primary/[0.04] p-3">
+              <div className="rounded-md border border-primary/20 bg-primary/[0.04] p-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs">Título em negrito acima dos botões (opcional)</Label>
                   <Input
@@ -2328,7 +2329,7 @@ export function ChatbotPage() {
             ) : null}
 
             {options.length > 3 ? (
-              <div className="rounded-xl border border-primary/20 bg-primary/[0.04] p-3">
+              <div className="rounded-md border border-primary/20 bg-primary/[0.04] p-3">
                 <p className="text-xs font-semibold">Menu com 4 a 8 opções</p>
                 <p className="mt-1 text-[11px] text-muted-foreground">
                   A partir do 4º botão, o WhatsApp exibe as opções em um único menu. Todo texto visível abaixo é definido por você.
@@ -2363,7 +2364,7 @@ export function ChatbotPage() {
             ) : null}
 
             {options.map((button, optionIndex) => (
-              <div key={button.id} className="rounded-xl border border-border bg-background/30 p-3">
+              <div key={button.id} className="rounded-md border border-border bg-background/30 p-3">
                 <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_auto]">
                   <Input
                     value={button.label}
@@ -2643,16 +2644,16 @@ export function ChatbotPage() {
 
   return (
     <>
-      <div className="mb-6 w-full pt-1 md:mb-7 md:pt-5">
-        <div className="border-b border-border/55 pb-4 md:pb-5">
+      <div className="mb-6 w-full pt-1 md:mb-7 md:pt-3">
+        <div className="border-b border-border pb-4">
           <div className="min-w-0">
-            <h1 className="break-words text-[1.75rem] font-semibold leading-none tracking-[-0.035em] text-foreground sm:text-[1.9rem] md:text-[2rem]">Chatbot</h1>
-            <p className="mt-2 max-w-2xl break-words text-[13px] leading-5 text-muted-foreground/75">Crie fluxos visuais de atendimento para o WhatsApp, no estilo Typebot.</p>
+            <h1 className="break-words text-2xl font-semibold tracking-tight text-foreground md:text-[1.6rem]">Chatbot</h1>
+            <p className="mt-1 max-w-2xl break-words text-sm leading-5 text-muted-foreground">Atendimento automático para o WhatsApp.</p>
           </div>
         </div>
         <div className="flex w-full flex-wrap items-center gap-2 pt-4 sm:justify-end">
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
+            <div className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2">
               <Bot className="size-4 text-primary" />
               <span className="text-sm font-medium">{config.ativo ? "Bot ativo" : "Bot desativado"}</span>
               <Switch checked={config.ativo} onCheckedChange={(checked) => void saveConfig({ ativo: checked })} />
@@ -2664,10 +2665,10 @@ export function ChatbotPage() {
         </div>
       </div>
 
-      <div className="mb-4 overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="mb-4 overflow-hidden rounded-lg border border-border bg-card">
         <div className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between">
           <div className="flex min-w-0 items-start gap-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
               <Bot className="size-5" />
             </span>
             <div className="min-w-0">
@@ -2726,7 +2727,7 @@ export function ChatbotPage() {
           <div className="border-t border-border bg-background/30 p-4">
             <div className="grid gap-4 md:grid-cols-[auto_minmax(0,1fr)] md:items-center">
               {evolutionConnection.qr ? (
-                <div className="rounded-2xl bg-white p-3">
+                <div className="rounded-lg bg-white p-3">
                   <img
                     src={String(evolutionConnection.qr)}
                     alt="QR Code do WhatsApp do Chatbot"
@@ -2746,7 +2747,7 @@ export function ChatbotPage() {
                 </p>
 
                 {evolutionConnection.pairingCode ? (
-                  <div className="mt-3 rounded-xl border border-border bg-card px-4 py-3">
+                  <div className="mt-3 rounded-md border border-border bg-card px-4 py-3">
                     <p className="text-xs text-muted-foreground">Código de pareamento</p>
                     <p className="mt-1 font-mono text-lg font-semibold tracking-wider">{String(evolutionConnection.pairingCode)}</p>
                   </div>
@@ -2769,9 +2770,9 @@ export function ChatbotPage() {
       </div>
 
       {sidebarTab !== "typebot" ? (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card px-3 py-3">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card px-3 py-3">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
               <Bot className="size-4.5" />
             </span>
             <div className="min-w-0">
@@ -2793,12 +2794,22 @@ export function ChatbotPage() {
         className={`grid min-h-[660px] w-full min-w-0 max-w-full gap-2 xl:gap-3 ${
           workspaceNavCollapsed
             ? "xl:grid-cols-[64px_minmax(0,1fr)]"
-            : "xl:grid-cols-[176px_minmax(0,1fr)]"
+            : "xl:grid-cols-[240px_minmax(0,1fr)]"
         }`}
       >
         <nav className="relative z-20 row-start-1 min-w-0 max-w-full xl:col-start-1 xl:row-start-1">
-          <div className={`sticky top-4 flex w-full max-w-full gap-2 overflow-x-auto overflow-y-hidden rounded-2xl border border-border bg-card p-2 shadow-sm xl:flex-col xl:overflow-visible ${workspaceNavCollapsed ? "xl:px-1.5" : ""}`}>
-            <div className="hidden items-center justify-end border-b border-border/70 pb-2 xl:flex">
+          <div className={`sticky top-4 flex w-full max-w-full gap-2 overflow-x-auto overflow-y-hidden rounded-lg border border-sidebar-border bg-sidebar p-3 text-sidebar-foreground xl:flex-col xl:overflow-visible ${workspaceNavCollapsed ? "xl:px-1.5" : ""}`}>
+            <div className="hidden items-center gap-3 border-b border-sidebar-border px-2 pb-3 pt-1 xl:flex">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-sidebar-accent text-sidebar-foreground">
+                <Bot className="size-4.5" />
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold">Mago Chatbot</p>
+                <p className="truncate text-[11px] text-muted-foreground">{config.ativo ? "Bot ativo" : "Bot desativado"}</p>
+              </div>
+            </div>
+            <div className="hidden px-2 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground xl:block">Atendimento</div>
+            <div className="hidden items-center justify-end border-b border-sidebar-border/0 pb-2 xl:flex">
               <button
                 type="button"
                 onClick={toggleWorkspaceNav}
@@ -2823,31 +2834,26 @@ export function ChatbotPage() {
                 type="button"
                 title={label}
                 onClick={() => setSidebarTab(tab)}
-                className={`flex min-h-12 min-w-[150px] shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left transition xl:min-w-0 xl:w-full ${workspaceNavCollapsed ? "xl:justify-center xl:px-1" : ""} ${
+                className={`flex min-h-12 min-w-[150px] shrink-0 items-center gap-3 rounded-md px-3 py-2 text-left transition xl:min-w-0 xl:w-full ${workspaceNavCollapsed ? "xl:justify-center xl:px-1" : ""} ${
                   sidebarTab === tab
-                    ? "bg-primary/12 text-primary"
-                    : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
+                    ? "bg-sidebar-accent text-sidebar-foreground"
+                    : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
                 }`}
               >
-                <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${
-                  tab === "typebot"
-                    ? "bg-sky-500/15 text-sky-400"
-                    : tab === "fluxos"
-                      ? "bg-violet-500/15 text-violet-400"
-                      : tab === "configuracoes"
-                        ? "bg-amber-500/15 text-amber-400"
-                        : tab === "comandos"
-                          ? "bg-cyan-500/15 text-cyan-400"
-                        : "bg-emerald-500/15 text-emerald-400"
+                <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg transition ${
+                  sidebarTab === tab
+                    ? "bg-sidebar-foreground/10 text-sidebar-foreground"
+                    : "bg-transparent text-muted-foreground"
                 }`}>
                   <Icon className="size-4.5 shrink-0" />
                 </span>
                 <span className={`min-w-0 ${workspaceNavCollapsed ? "xl:hidden" : ""}`}>
                   <span className="block whitespace-nowrap text-sm font-semibold">{label}</span>
-                  <span className="mt-0.5 hidden text-[10px] leading-4 text-muted-foreground xl:block">
+                  <span className="mt-0.5 hidden text-[10px] leading-4 text-muted-foreground">
                     {description}
                   </span>
                 </span>
+                <ChevronRight className={`ml-auto hidden size-3.5 shrink-0 opacity-50 xl:block ${workspaceNavCollapsed ? "xl:hidden" : ""}`} />
               </button>
             ))}
 
@@ -2857,14 +2863,14 @@ export function ChatbotPage() {
                 onClick={() => {
                   newFlow();
                 }}
-                className={`flex min-h-11 w-full min-w-0 items-center gap-3 rounded-xl px-3 py-2 text-left text-muted-foreground transition hover:bg-primary/10 hover:text-primary ${workspaceNavCollapsed ? "xl:justify-center xl:px-1" : ""}`}
+                className={`flex min-h-11 w-full min-w-0 items-center gap-3 rounded-md px-3 py-2 text-left text-muted-foreground transition hover:bg-primary/10 hover:text-primary ${workspaceNavCollapsed ? "xl:justify-center xl:px-1" : ""}`}
               >
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-background/40">
                   <Plus className="size-4.5 shrink-0" />
                 </span>
                 <span className={`min-w-0 ${workspaceNavCollapsed ? "xl:hidden" : ""}`}>
                   <span className="block whitespace-nowrap text-sm font-semibold">Novo fluxo</span>
-                  <span className="mt-0.5 block text-[10px] leading-4 text-muted-foreground">
+                  <span className="mt-0.5 hidden text-[10px] leading-4 text-muted-foreground">
                     Criar um novo atendimento
                   </span>
                 </span>
@@ -2873,7 +2879,7 @@ export function ChatbotPage() {
           </div>
         </nav>
 
-        <aside className={`${["fluxos", "templates", "respostas"].includes(sidebarTab) ? "" : "hidden"} row-start-2 min-w-0 max-w-full overflow-hidden rounded-2xl border border-border bg-card xl:col-start-2 xl:row-start-1`}>
+        <aside className={`${["fluxos", "templates", "respostas"].includes(sidebarTab) ? "" : "hidden"} row-start-2 min-w-0 max-w-full overflow-hidden rounded-lg border border-border bg-card xl:col-start-2 xl:row-start-1`}>
           {sidebarTab === "fluxos" ? (
             <>
               <div className="border-b border-border p-4">
@@ -2899,7 +2905,7 @@ export function ChatbotPage() {
                     <p className="mt-1 text-xs text-muted-foreground">Clique em “Novo fluxo”.</p>
                   </div>
                 ) : filteredFlows.map((row) => (
-                  <div key={String(row.id)} className={`rounded-xl border p-3 transition ${selectedId === String(row.id) ? "border-primary bg-primary/5" : "border-border bg-background/20 hover:bg-background/40"}`}>
+                  <div key={String(row.id)} className={`rounded-md border p-3 transition ${selectedId === String(row.id) ? "border-primary bg-primary/5" : "border-border bg-background/20 hover:bg-background/40"}`}>
                     <button className="w-full text-left" onClick={() => selectFlow(row)}>
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
@@ -2935,7 +2941,7 @@ export function ChatbotPage() {
               </div>
 
               <div className="space-y-3 p-3">
-                <div className="rounded-xl border border-border bg-background/20 p-3">
+                <div className="rounded-md border border-border bg-background/20 p-3">
                   <div className="mb-3 flex items-center justify-between gap-2">
                     <p className="text-sm font-semibold">{editingTemplateId ? "Editar template" : "Criar template"}</p>
                     {editingTemplateId ? (
@@ -3042,7 +3048,7 @@ export function ChatbotPage() {
                   <div className="space-y-2">
                     <p className="px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Templates criados</p>
                     {templates.map((template) => (
-                      <div key={String(template.id)} className="rounded-xl border border-border bg-background/20 p-3">
+                      <div key={String(template.id)} className="rounded-md border border-border bg-background/20 p-3">
                         <div className="flex items-center gap-2">
                           <p className="min-w-0 flex-1 truncate text-sm font-semibold">{String(template.titulo ?? "Template")}</p>
                           {String(template.midia_tipo ?? "") === "imagem" ? (
@@ -3107,7 +3113,7 @@ export function ChatbotPage() {
                     type="button"
                     disabled={!draft}
                     onClick={() => addBlock(type)}
-                    className="flex items-center gap-3 rounded-xl border border-border bg-background/20 p-3 text-left transition hover:border-primary/50 hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex items-center gap-3 rounded-md border border-border bg-background/20 p-3 text-left transition hover:border-primary/50 hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <div className="rounded-lg bg-primary/10 p-2 text-primary"><Icon className="size-4" /></div>
                     <div>
@@ -3121,7 +3127,7 @@ export function ChatbotPage() {
           ) : null}
         </aside>
 
-        <main className={`${sidebarTab === "typebot" ? "" : "hidden"} relative row-start-2 w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-border bg-card xl:col-start-2 xl:row-start-1`}>
+        <main className={`${sidebarTab === "typebot" ? "" : "hidden"} relative row-start-2 w-full min-w-0 max-w-full overflow-hidden rounded-md border border-border bg-card xl:col-start-2 xl:row-start-1`}>
           {!draft ? (
             <div className="flex h-full min-h-[650px] items-center justify-center p-8 text-center">
               <div>
@@ -3331,7 +3337,7 @@ export function ChatbotPage() {
                                     <span className="min-w-0 flex-1 truncate text-[10px]">{button.label || "Botão sem nome"}</span>
                                     <button
                                       type="button"
-                                      className="size-3.5 shrink-0 rounded-full border-2 border-[#090d14] bg-sky-400 hover:scale-110"
+                                      className="size-3.5 shrink-0 rounded-full border-2 border-[#090d14] bg-muted-foreground hover:scale-110"
                                       onPointerDown={(event) => beginCanvasConnection(event, mapBlock.id, "button", button.id)}
                                       title="Puxe para conectar este botão"
                                     />
@@ -3347,7 +3353,7 @@ export function ChatbotPage() {
                                     <span className="min-w-0 flex-1 truncate text-[10px]">{item.label || "Opção sem nome"}</span>
                                     <button
                                       type="button"
-                                      className="size-3.5 shrink-0 rounded-full border-2 border-[#090d14] bg-violet-400 hover:scale-110"
+                                      className="size-3.5 shrink-0 rounded-full border-2 border-[#090d14] bg-muted-foreground hover:scale-110"
                                       onPointerDown={(event) => beginCanvasConnection(event, mapBlock.id, "item", item.id)}
                                       title="Puxe para conectar esta opção"
                                     />
@@ -3360,11 +3366,11 @@ export function ChatbotPage() {
                               <div className="mt-2 flex justify-end">
                                 <button
                                   type="button"
-                                  className="flex items-center gap-1.5 rounded-full border border-border bg-background/60 px-2 py-1 text-[9px] text-muted-foreground hover:border-sky-400/60 hover:text-sky-300"
+                                  className="flex items-center gap-1.5 rounded-full border border-border bg-background/60 px-2 py-1 text-[9px] text-muted-foreground hover:border-border hover:text-foreground"
                                   onPointerDown={(event) => beginCanvasConnection(event, mapBlock.id, "next")}
                                   title="Puxe para conectar ao próximo bloco"
                                 >
-                                  conectar <span className="size-2.5 rounded-full bg-sky-400" />
+                                  conectar <span className="size-2.5 rounded-full bg-muted-foreground" />
                                 </button>
                               </div>
                             ) : null}
@@ -3468,7 +3474,7 @@ export function ChatbotPage() {
                       <div
                         id={`chatbot-block-${block.id}`}
                         key={block.id}
-                        className={`min-w-0 rounded-2xl border bg-card shadow-sm transition-all duration-300 ${focusedBlockId === block.id ? "border-primary ring-2 ring-primary/20" : "border-border"}`}
+                        className={`min-w-0 rounded-lg border bg-card shadow-sm transition-all duration-300 ${focusedBlockId === block.id ? "border-primary ring-2 ring-primary/20" : "border-border"}`}
                       >
                         <div className="flex flex-col gap-2 border-b border-border px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
                           <div className="flex min-w-0 items-center gap-2">
@@ -3542,7 +3548,7 @@ export function ChatbotPage() {
                                 </Select>
                               </div>
                               {block.template ? (
-                                <div className="rounded-xl border border-border bg-background/30 p-3">
+                                <div className="rounded-md border border-border bg-background/30 p-3">
                                   <div className="mb-2 flex flex-wrap items-center gap-2">
                                     <Badge variant="secondary">{String(block.template["titulo"] ?? "Mensagem pronta")}</Badge>
                                     {block.template["midia_tipo"] ? <Badge variant="outline">{String(block.template["midia_tipo"])}</Badge> : null}
@@ -3566,10 +3572,10 @@ export function ChatbotPage() {
                               <Textarea value={block.text ?? ""} onChange={(e) => updateBlock(block.id, { text: e.target.value })} rows={2} placeholder="Descrição do link" />
                               <Input value={block.url ?? ""} onChange={(e) => updateBlock(block.id, { url: e.target.value })} placeholder="https://seusite.com.br" />
                               <Input value={block.buttonText ?? ""} onChange={(e) => updateBlock(block.id, { buttonText: e.target.value })} placeholder="Texto do botão, ex.: Visite nosso website" />
-                              <div className="rounded-xl border border-border bg-background/30 p-3">
+                              <div className="rounded-md border border-border bg-background/30 p-3">
                                 <p className="font-medium">{block.title || "Podemos te ajudar com algo?"}</p>
                                 <p className="mt-1 text-sm text-muted-foreground">{block.text || "Acesse o nosso site e saiba mais."}</p>
-                                <div className="mt-3 flex items-center justify-center gap-2 border-t border-border pt-3 text-sm font-medium text-sky-400">
+                                <div className="mt-3 flex items-center justify-center gap-2 border-t border-border pt-3 text-sm font-medium text-foreground">
                                   <Link2 className="size-4" /> {block.buttonText || "Visite nosso website"}
                                 </div>
                               </div>
@@ -3589,7 +3595,7 @@ export function ChatbotPage() {
                                   Ao chegar neste bloco, o Nexos faz um POST nesta URL e envia ao cliente a resposta retornada pela API. Nenhum texto extra é acrescentado.
                                 </p>
                               </div>
-                              <div className="rounded-xl border border-border bg-background/30 p-3">
+                              <div className="rounded-md border border-border bg-background/30 p-3">
                                 <p className="text-sm font-medium">Resposta automática da URL</p>
                                 <p className="mt-1 text-xs text-muted-foreground">
                                   Compatível com resposta em texto puro ou JSON usando campos como reply, message ou data[0].message.
@@ -3600,7 +3606,7 @@ export function ChatbotPage() {
 
                           {block.type === "goat_trial" ? (
                             <div className="space-y-3">
-                              <div className="rounded-xl border border-primary/20 bg-primary/[0.04] p-3">
+                              <div className="rounded-md border border-primary/20 bg-primary/[0.04] p-3">
                                 <p className="text-sm font-semibold">Teste automático GOAT</p>
                                 <p className="mt-1 text-xs text-muted-foreground">
                                   Escolha se este bloco cria teste IPTV ou P2P no painel GOAT.
@@ -3678,7 +3684,7 @@ export function ChatbotPage() {
 
                           {block.type === "p2c_trial" ? (
                             <div className="space-y-3">
-                              <div className="rounded-xl border border-primary/20 bg-primary/[0.04] p-3">
+                              <div className="rounded-md border border-primary/20 bg-primary/[0.04] p-3">
                                 <p className="text-sm font-semibold">Teste automático P2Cine</p>
                                 <p className="mt-1 text-xs text-muted-foreground">
                                   O Nexos usa a chave de autoteste salva internamente, gera o login e envia usuário, senha e servidor ao cliente.
@@ -3710,7 +3716,7 @@ export function ChatbotPage() {
 
                           {block.type === "nix_trial" ? (
                             <div className="space-y-3">
-                              <div className="rounded-xl border border-primary/20 bg-primary/[0.04] p-3">
+                              <div className="rounded-md border border-primary/20 bg-primary/[0.04] p-3">
                                 <p className="text-sm font-semibold">Teste automático NIX</p>
                                 <p className="mt-1 text-xs text-muted-foreground">
                                   O Chatbot cria o teste no painel NIX e extrai usuário e senha automaticamente.
@@ -3786,7 +3792,7 @@ export function ChatbotPage() {
                           {(block.type === "video" || block.type === "audio") ? (
                             <div className="space-y-3">
                               {block.url ? (
-                                <div className="rounded-xl border border-border bg-background/30 p-3">
+                                <div className="rounded-md border border-border bg-background/30 p-3">
                                   <div className="flex items-center gap-3">
                                     {block.type === "video" ? <Video className="size-6 text-primary" /> : <Music className="size-6 text-primary" />}
                                     <div className="min-w-0">
@@ -3796,7 +3802,7 @@ export function ChatbotPage() {
                                   </div>
                                 </div>
                               ) : null}
-                              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-background/30 p-5 text-sm hover:border-primary/60">
+                              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border bg-background/30 p-5 text-sm hover:border-primary/60">
                                 <Upload className="size-4" />
                                 {uploadingBlockId === block.id ? "Enviando..." : block.url ? `Trocar ${block.type === "video" ? "vídeo" : "áudio"}` : `Enviar ${block.type === "video" ? "vídeo" : "áudio"}`}
                                 <input
@@ -3825,7 +3831,7 @@ export function ChatbotPage() {
                               </div>
                               <div className="space-y-2">
                                 {(block.items ?? []).map((item) => (
-                                  <div key={item.id} className="rounded-xl border border-border bg-background/25 p-3">
+                                  <div key={item.id} className="rounded-md border border-border bg-background/25 p-3">
                                     <div className="grid gap-2 md:grid-cols-[1fr_1fr_auto]">
                                       <Input value={item.label} onChange={(e) => updateListItem(block.id, item.id, { label: e.target.value })} placeholder="Nome da opção" />
                                       <Input value={item.description ?? ""} onChange={(e) => updateListItem(block.id, item.id, { description: e.target.value })} placeholder="Descrição curta" />
@@ -3891,11 +3897,11 @@ export function ChatbotPage() {
                           {block.type === "image" ? (
                             <>
                               {block.url ? (
-                                <div className="overflow-hidden rounded-xl border border-border bg-background/30">
+                                <div className="overflow-hidden rounded-md border border-border bg-background/30">
                                   <img src={block.url} alt="" className="max-h-64 w-full object-contain" />
                                 </div>
                               ) : null}
-                              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-background/30 p-5 text-sm hover:border-primary/60">
+                              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border bg-background/30 p-5 text-sm hover:border-primary/60">
                                 <Upload className="size-4" />
                                 {uploadingBlockId === block.id ? "Enviando..." : block.url ? "Trocar imagem" : "Enviar imagem"}
                                 <input
@@ -3917,7 +3923,7 @@ export function ChatbotPage() {
                           {block.type === "file" ? (
                             <>
                               {block.url ? (
-                                <div className="flex items-center gap-3 rounded-xl border border-border bg-background/30 p-3">
+                                <div className="flex items-center gap-3 rounded-md border border-border bg-background/30 p-3">
                                   <FileText className="size-6 text-primary" />
                                   <div className="min-w-0">
                                     <p className="truncate text-sm font-medium">{block.fileName}</p>
@@ -3925,7 +3931,7 @@ export function ChatbotPage() {
                                   </div>
                                 </div>
                               ) : null}
-                              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-background/30 p-5 text-sm hover:border-primary/60">
+                              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border bg-background/30 p-5 text-sm hover:border-primary/60">
                                 <Upload className="size-4" />
                                 {uploadingBlockId === block.id ? "Enviando..." : block.url ? "Trocar arquivo" : "Enviar arquivo"}
                                 <input
@@ -3963,7 +3969,7 @@ export function ChatbotPage() {
                               <Textarea value={block.text ?? ""} onChange={(e) => updateBlock(block.id, { text: e.target.value })} rows={2} placeholder="Texto que aparece acima dos botões" />
                               <div className="space-y-2">
                                 {(block.buttons ?? []).map((button) => (
-                                  <div key={button.id} className="rounded-xl border border-border bg-background/25 p-3">
+                                  <div key={button.id} className="rounded-md border border-border bg-background/25 p-3">
                                     <div className="grid gap-2 md:grid-cols-[1fr_145px_auto]">
                                       <Input value={button.label} onChange={(e) => updateButton(block.id, button.id, { label: e.target.value })} placeholder="Texto do botão" />
                                       <Select value={button.type} onValueChange={(value) => updateButton(block.id, button.id, { type: value as FlowButton["type"] })}>
@@ -4050,7 +4056,7 @@ export function ChatbotPage() {
         </main>
 
         <aside className={`${sidebarTab === "comandos" && chatbotMode === "master" ? "row-start-2 min-w-0 max-w-full xl:col-start-2 xl:row-start-1" : "hidden"}`}>
-          <section className="rounded-2xl border border-border bg-card p-4 md:p-5">
+          <section className="rounded-lg border border-border bg-card p-4 md:p-5">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="font-semibold">Comandos</h2>
@@ -4061,7 +4067,7 @@ export function ChatbotPage() {
                 <Button type="button" size="sm" onClick={()=>{setCommandImage(null);setCommandDraft({...EMPTY_COMMAND});}}><Plus className="mr-1 size-4"/>Novo comando</Button>
               </div>
             </div>
-            <div className="divide-y divide-border overflow-hidden rounded-xl border border-border">
+            <div className="divide-y divide-border overflow-hidden rounded-md border border-border">
               {loadingCommands && !commands.length ? <p className="px-4 py-4 text-sm text-muted-foreground">Carregando comandos...</p> : null}
               {!loadingCommands && !commands.length ? <p className="px-4 py-4 text-sm text-muted-foreground">Nenhum comando cadastrado.</p> : null}
               {orderedCommandRows().map((item,index,all)=>(
@@ -4204,7 +4210,7 @@ export function ChatbotPage() {
         </aside>
 
         <aside className={`${sidebarTab === "configuracoes" ? "row-start-2 min-w-0 max-w-full space-y-4 xl:col-start-2 xl:row-start-1" : "hidden"}`}>
-          <section className="rounded-2xl border border-border bg-card p-4">
+          <section className="rounded-lg border border-border bg-card p-4">
             <div className="mb-4 flex items-center gap-2">
               <Settings2 className="size-5 text-primary" />
               <div>
@@ -4251,7 +4257,7 @@ export function ChatbotPage() {
                   <Input type="number" min={1} value={draft.prioridade} onChange={(e) => setDraft({ ...draft, prioridade: Number(e.target.value || 100) })} />
                 </div>
 
-                <div className="space-y-3 rounded-xl border border-border p-3">
+                <div className="space-y-3 rounded-md border border-border p-3">
                   <div>
                     <p className="text-sm font-medium">Onde este fluxo responde</p>
                     <p className="text-xs text-muted-foreground">Estas regras valem somente para este fluxo.</p>
@@ -4359,7 +4365,7 @@ export function ChatbotPage() {
                   ) : null}
                 </div>
 
-                <div className="flex items-center justify-between rounded-xl border border-border p-3">
+                <div className="flex items-center justify-between rounded-md border border-border p-3">
                   <div><p className="text-sm font-medium">Fluxo ativo</p><p className="text-xs text-muted-foreground">Pode responder clientes.</p></div>
                   <Switch checked={draft.ativo} onCheckedChange={(checked) => setDraft({ ...draft, ativo: checked })} />
                 </div>
@@ -4379,7 +4385,7 @@ export function ChatbotPage() {
             )}
           </section>
 
-          <section className="rounded-2xl border border-border bg-card p-4">
+          <section className="rounded-lg border border-border bg-card p-4">
             <h2 className="mb-3 font-semibold">Configuração geral</h2>
             <div className="space-y-4">
               <div className="flex items-center justify-between gap-3">
@@ -4436,7 +4442,7 @@ export function ChatbotPage() {
                     {config.numeros_ignorados.map((number) => (
                       <div
                         key={number}
-                        className="flex items-center justify-between gap-3 rounded-xl border border-border bg-background/30 px-3 py-2"
+                        className="flex items-center justify-between gap-3 rounded-md border border-border bg-background/30 px-3 py-2"
                       >
                         <span className="text-sm font-medium">+{number}</span>
                         <Button
@@ -4461,11 +4467,11 @@ export function ChatbotPage() {
         </aside>
 
         <aside className={`${chatbotMode === "master" && sidebarTab === "status" ? "row-start-2 min-w-0 max-w-full xl:col-start-2 xl:row-start-1" : "hidden"}`}>
-          <section className="overflow-hidden rounded-2xl border border-border bg-card">
+          <section className="overflow-hidden rounded-lg border border-border bg-card">
             <div className="border-b border-border p-5 md:p-6">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex items-start gap-3">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
                     <Send className="size-5" />
                   </span>
                   <div>
@@ -4507,7 +4513,7 @@ export function ChatbotPage() {
               </div>
             ) : telegramConnection.connected !== true ? (
               <div className="grid gap-5 p-5 md:p-6 lg:grid-cols-[1.1fr_0.9fr]">
-                <div className="rounded-2xl border border-border bg-background/25 p-4 md:p-5">
+                <div className="rounded-lg border border-border bg-background/25 p-4 md:p-5">
                   <div className="mb-4">
                     <h3 className="text-sm font-semibold">Conectar sua conta do Telegram</h3>
                     <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
@@ -4556,7 +4562,7 @@ export function ChatbotPage() {
                   </Button>
 
                   {telegramConnection.awaiting_code === true ? (
-                    <div className="mt-5 space-y-3 rounded-2xl border border-primary/20 bg-primary/[0.04] p-4">
+                    <div className="mt-5 space-y-3 rounded-lg border border-primary/20 bg-primary/[0.04] p-4">
                       <div>
                         <p className="text-sm font-semibold">Código enviado para {String(telegramConnection.phone_masked ?? "sua conta")}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
@@ -4595,12 +4601,12 @@ export function ChatbotPage() {
                   ) : null}
                 </div>
 
-                <div className="rounded-2xl border border-border bg-background/25 p-4 md:p-5">
+                <div className="rounded-lg border border-border bg-background/25 p-4 md:p-5">
                   <h3 className="text-sm font-semibold">Primeira conexão</h3>
                   <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
                     O Telegram exige um API ID e um API Hash para permitir que um sistema use uma conta pessoal. Esses dados são criados uma única vez na área oficial do Telegram.
                   </p>
-                  <div className="mt-4 space-y-2 rounded-xl border border-border bg-card/40 p-3 text-xs leading-relaxed text-muted-foreground">
+                  <div className="mt-4 space-y-2 rounded-md border border-border bg-card/40 p-3 text-xs leading-relaxed text-muted-foreground">
                     <p>1. Abra <strong className="text-foreground">my.telegram.org</strong> e entre com o mesmo telefone.</p>
                     <p>2. Abra <strong className="text-foreground">API development tools</strong> e crie um aplicativo.</p>
                     <p>3. Copie o <strong className="text-foreground">App api_id</strong> e o <strong className="text-foreground">App api_hash</strong> para os campos ao lado.</p>
@@ -4614,7 +4620,7 @@ export function ChatbotPage() {
                   >
                     Abrir site oficial do Telegram
                   </Button>
-                  <div className="mt-4 rounded-xl border border-primary/20 bg-primary/[0.04] p-3">
+                  <div className="mt-4 rounded-md border border-primary/20 bg-primary/[0.04] p-3">
                     <p className="text-xs font-medium text-foreground">O bot de notificações continua separado</p>
                     <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                       Esta conexão não altera o Telegram usado para receber alertas do Gestor.
@@ -4624,7 +4630,7 @@ export function ChatbotPage() {
               </div>
             ) : (
               <div className="space-y-5 p-5 md:p-6">
-                <div className="flex flex-col gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.05] p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-3 rounded-lg border border-emerald-500/20 bg-emerald-500/[0.05] p-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="text-sm font-semibold">Telegram conectado</p>
@@ -4656,7 +4662,7 @@ export function ChatbotPage() {
                 </div>
 
                 <div className="grid gap-4 lg:grid-cols-2">
-                  <div className="rounded-2xl border border-border bg-background/25 p-4">
+                  <div className="rounded-lg border border-border bg-background/25 p-4">
                     <div className="mb-4">
                       <h3 className="text-sm font-semibold">Grupo / canal de divulgação</h3>
                       <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
@@ -4693,14 +4699,14 @@ export function ChatbotPage() {
                     </div>
 
                     {telegramSources.length === 0 ? (
-                      <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/[0.06] p-3">
+                      <div className="mt-4 rounded-md border border-amber-500/20 bg-amber-500/[0.06] p-3">
                         <p className="text-xs font-medium text-amber-300">Nenhum grupo encontrado.</p>
                         <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                           Clique em “Atualizar grupos”. Se o grupo aparece normalmente no seu Telegram, ele deverá aparecer aqui também.
                         </p>
                       </div>
                     ) : (
-                      <div className="mt-4 rounded-xl border border-border bg-card/40 p-3 text-xs text-muted-foreground">
+                      <div className="mt-4 rounded-md border border-border bg-card/40 p-3 text-xs text-muted-foreground">
                         <p>{telegramSources.length} grupo(s) e canal(is) encontrados na sua conta.</p>
                         {statusSync.telegram_chat_title ? (
                           <p className="mt-1 font-medium text-foreground">Selecionado: {statusSync.telegram_chat_title}</p>
@@ -4708,7 +4714,7 @@ export function ChatbotPage() {
                       </div>
                     )}
 
-                    <div className="mt-4 rounded-xl border border-primary/20 bg-primary/[0.04] p-3">
+                    <div className="mt-4 rounded-md border border-primary/20 bg-primary/[0.04] p-3">
                       <p className="text-xs font-medium text-foreground">Como funciona</p>
                       <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                         O Nexus verifica novas publicações aproximadamente a cada minuto. Cada tipo pode ter seu próprio destino: Status do WhatsApp e/ou um grupo escolhido abaixo.
@@ -4716,7 +4722,7 @@ export function ChatbotPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-border bg-background/25 p-4">
+                  <div className="rounded-lg border border-border bg-background/25 p-4">
                     <div className="mb-4 flex items-center justify-between gap-4">
                       <div>
                         <h3 className="text-sm font-semibold">Publicação no WhatsApp</h3>
@@ -4729,7 +4735,7 @@ export function ChatbotPage() {
                     </div>
 
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-card/40 p-3">
+                      <div className="flex items-center justify-between gap-4 rounded-md border border-border bg-card/40 p-3">
                         <div className="flex items-center gap-3">
                           <span className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
                             <ImageIcon className="size-4" />
@@ -4745,7 +4751,7 @@ export function ChatbotPage() {
                         />
                       </div>
 
-                      <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-card/40 p-3">
+                      <div className="flex items-center justify-between gap-4 rounded-md border border-border bg-card/40 p-3">
                         <div className="flex items-center gap-3">
                           <span className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
                             <Video className="size-4" />
@@ -4761,7 +4767,7 @@ export function ChatbotPage() {
                         />
                       </div>
 
-                      <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-card/40 p-3">
+                      <div className="flex items-center justify-between gap-4 rounded-md border border-border bg-card/40 p-3">
                         <div className="flex items-center gap-3">
                           <span className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
                             <MessageSquareText className="size-4" />
@@ -4778,7 +4784,7 @@ export function ChatbotPage() {
                       </div>
                     </div>
 
-                    <div className="mt-4 rounded-xl border border-border bg-card/40 p-3">
+                    <div className="mt-4 rounded-md border border-border bg-card/40 p-3">
                       <div className="flex items-center justify-between gap-3">
                         <span className="text-xs text-muted-foreground">Estado da automação</span>
                         <Badge variant="outline" className={statusSync.ativo ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" : ""}>
@@ -4789,7 +4795,7 @@ export function ChatbotPage() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-border bg-background/25 p-4">
+                <div className="rounded-lg border border-border bg-background/25 p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex items-start gap-3">
                       <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -4932,7 +4938,7 @@ export function ChatbotPage() {
                   </div>
 
                   {whatsappForwardGroups.length === 0 ? (
-                    <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/[0.06] p-3">
+                    <div className="mt-4 rounded-md border border-amber-500/20 bg-amber-500/[0.06] p-3">
                       <p className="text-xs font-medium text-amber-300">Nenhuma comunidade ou grupo carregado.</p>
                       <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                         Clique em “Atualizar WhatsApp”. A lista é lida do mesmo WhatsApp que está conectado ao Chatbot.
@@ -4940,7 +4946,7 @@ export function ChatbotPage() {
                     </div>
                   ) : null}
 
-                  <div className="mt-4 rounded-xl border border-border bg-card/30 p-4">
+                  <div className="mt-4 rounded-md border border-border bg-card/30 p-4">
                     <div>
                       <p className="text-sm font-semibold">Enviar mensagem manualmente</p>
                       <p className="mt-1 text-xs text-muted-foreground">
@@ -4972,14 +4978,14 @@ export function ChatbotPage() {
                     </div>
                   </div>
 
-                  <div className="mt-4 rounded-xl border border-border bg-card/40 p-3 text-xs leading-relaxed text-muted-foreground">
+                  <div className="mt-4 rounded-md border border-border bg-card/40 p-3 text-xs leading-relaxed text-muted-foreground">
                     <p>
                       Todas as novas publicações suportadas da origem de avisos são encaminhadas: <strong className="text-foreground">texto, imagem, imagem com legenda e vídeo</strong>. A origem do Status acima continua separada e não é usada por esta automação.
                     </p>
                   </div>
                 </div>
 
-                <div className="overflow-hidden rounded-2xl border border-border">
+                <div className="overflow-hidden rounded-lg border border-border">
                   <div className="flex items-center justify-between border-b border-border bg-background/20 px-4 py-3">
                     <div>
                       <h3 className="text-sm font-semibold">Últimas publicações</h3>
