@@ -344,8 +344,11 @@ Deno.serve(async (req) => {
       // Instala o webhook uma única vez, inclusive em números que já estavam conectados antes da atualização.
       const configuredHooks = Array.isArray(current?.config?.webhooks) ? current.config.webhooks : [];
       const hookUrl = "https://lfnjsnnjgmsknrywtsyy.supabase.co/functions/v1/chatbot-webhook";
-      const hasBotmgHook = configuredHooks.some((hook: any) => String(hook?.url ?? "") === hookUrl);
-      if (current && !hasBotmgHook) {
+      const hookIsValid = configuredHooks.some((hook: any) =>
+        String(hook?.url ?? "") === hookUrl &&
+        String(hook?.hmac?.key ?? "") === "M4_qrF7ZXBiwtSfg37aZylcyIBJqan0WLMwpBoAETl"
+      );
+      if (current && !hookIsValid) {
         const existingConfig = current?.config && typeof current.config === "object" ? current.config : {};
         await botmgWaha(`/api/sessions/${encodeURIComponent(BOTMG_WAHA_SESSION)}`, {
           method: "PUT",
@@ -353,11 +356,11 @@ Deno.serve(async (req) => {
             name: BOTMG_WAHA_SESSION,
             config: {
               ...existingConfig,
-              webhooks: [...configuredHooks, {
+              webhooks: [...configuredHooks.filter((hook: any) => String(hook?.url ?? "") !== hookUrl), {
                 url: hookUrl,
                 events: ["message", "message.ack"],
                 retries: { policy: "linear", delaySeconds: 2, attempts: 5 },
-                customHeaders: [{ name: "x-nexos-chatbot", value: "M4_qrF7ZXBiwtSfg37aZylcyIBJqan0WLMwpBoAETl" }]
+                hmac: { key: "M4_qrF7ZXBiwtSfg37aZylcyIBJqan0WLMwpBoAETl" }
               }]
             }
           })
@@ -458,8 +461,9 @@ Deno.serve(async (req) => {
 
     if (action === "list-groups") {
       if (auth.isAdmin) {
-        const data=await wahaMaster("list-groups");
-        return json({ok:true,groups:Array.isArray(data?.groups)?data.groups:[]});
+        const data = await botmgWaha(`/api/${encodeURIComponent(BOTMG_WAHA_SESSION)}/groups?limit=500&offset=0`);
+        const groups = Array.isArray(data) ? data : Array.isArray(data?.groups) ? data.groups : [];
+        return json({ ok: true, groups });
       }
       const response = await fetch(LOCAL_URL + "/functions/v1/whatsapp-tenant-bridge", {
         method: "POST",
