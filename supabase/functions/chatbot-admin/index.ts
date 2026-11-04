@@ -5,6 +5,59 @@ const LOCAL_SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const BRIDGE_URL = LOCAL_URL + "/functions/v1/whatsapp-bridge";
 const WAHA_BRIDGE_URL = LOCAL_URL + "/functions/v1/waha-bridge";
 const MASTER_OWNER_ID = "7b511665-4697-42f3-b82e-a42a431a70ef";
+const BOTMG_WAHA_URL = (Deno.env.get("BOTMG_WAHA_URL") ?? "").replace(/\\/+$/, "");
+const BOTMG_WAHA_API_KEY = Deno.env.get("BOTMG_WAHA_API_KEY") ?? "";
+const BOTMG_WAHA_SESSION = Deno.env.get("BOTMG_WAHA_SESSION") ?? "botmg-master";
+async function botmgWaha(path: string, init: RequestInit = {}) {
+  if (!BOTMG_WAHA_URL || !BOTMG_WAHA_API_KEY) throw new Error("Integração WAHA do BOTMG não configurada. Confira os Secrets do Supabase.");
+  const response = await fetch(`${BOTMG_WAHA_URL}${path}`, {
+    ...init, signal: init.signal ?? AbortSignal.timeout(15000),
+    headers: { "X-Api-Key": BOTMG_WAHA_API_KEY, "Accept": "application/json", ...(init.body ? { "Content-Type": "application/json" } : {}), ...(init.headers ?? {}) },
+  });
+  const raw = await response.text();
+  let data: any = null;
+  try { data = raw ? JSON.parse(raw) : null; } catch { data = raw; }
+  if (!response.ok) {
+    const message = data?.message ?? data?.error ?? data ?? `WAHA HTTP ${response.status}`;
+    throw new Error(typeof message === "string" ? message.slice(0, 300) : JSON.stringify(message).slice(0, 300));
+  }
+  return data;
+}
+async function botmgWahaSession() {
+  try { return await botmgWaha(`/api/sessions/${encodeURIComponent(BOTMG_WAHA_SESSION)}`); }
+  catch (error) {
+    if (/404|not found|does not exist/i.test(String((error as Error)?.message ?? error))) return null;
+    throw error;
+  }
+}
+async function botmgWahaConnect() {
+  let current = await botmgWahaSession();
+  if (!current) {
+    await botmgWaha("/api/sessions", { method: "POST", body: JSON.stringify({ name: BOTMG_WAHA_SESSION, config: {} }) });
+    current = await botmgWahaSession();
+  }
+  let status = String(current?.status ?? "").toUpperCase();
+  if (status === "STOPPED") await botmgWaha(`/api/sessions/${encodeURIComponent(BOTMG_WAHA_SESSION)}/start`, { method: "POST", body: JSON.stringify({}) });
+  for (let attempt = 0; attempt < 20; attempt++) {
+    current = await botmgWahaSession();
+    status = String(current?.status ?? "").toUpperCase();
+    if (["WORKING", "SCAN_QR_CODE", "PASSKEY_REQUIRED", "PASSKEY_CONFIRMATION_REQUIRED"].includes(status)) break;
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  if (status === "WORKING") return { connected: true, state: "open", qr: null };
+  if (status !== "SCAN_QR_CODE") return { connected: false, state: "connecting", qr: null };
+  const response = await fetch(`${BOTMG_WAHA_URL}/api/${encodeURIComponent(BOTMG_WAHA_SESSION)}/auth/qr?format=image`, {
+    headers: { "X-Api-Key": BOTMG_WAHA_API_KEY, "Accept": "application/json" }, signal: AbortSignal.timeout(15000),
+  });
+  const raw = await response.text();
+  let qr: any = null;
+  try { qr = raw ? JSON.parse(raw) : null; } catch { qr = null; }
+  if (!response.ok) throw new Error(String(qr?.message ?? qr?.error ?? `Falha ao obter QR (HTTP ${response.status}).`));
+  const qrData = qr?.data ? `data:${qr?.mimetype || "image/png"};base64,${qr.data}` : null;
+  if (!qrData) throw new Error("WAHA não retornou um QR válido. Tente novamente.");
+  return { connected: false, state: "connecting", qr: qrData };
+}
+
 
 const db = createClient(LOCAL_URL, LOCAL_SERVICE_ROLE, {
   auth: { persistSession: false, autoRefreshToken: false },
@@ -270,14 +323,14 @@ Deno.serve(async (req) => {
         });
       }
 
-      // O chatbot Master agora usa a sessão WAHA do Gestor (nunca a Evolution antiga).
-      const data = await wahaMaster("status");
+      const current = await botmgWahaSession();
+      const rawState = String(current?.status ?? "").toUpperCase();
       return json({
         ok: true,
         connection: {
-          instanceName: "nexos_master_primary",
-          connected: data?.connected === true || String(data?.state ?? "") === "open",
-          state: String(data?.state ?? (data?.connected ? "open" : "close")),
+          instanceName: BOTMG_WAHA_SESSION,
+          connected: rawState === "WORKING",
+          state: rawState === "WORKING" ? "open" : (["STARTING","SCAN_QR_CODE","PASSKEY_REQUIRED","PASSKEY_CONFIRMATION_REQUIRED"].includes(rawState) ? "connecting" : "close"),
           provider: "waha",
         },
       });
@@ -299,16 +352,15 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Nunca iniciar uma segunda sessão ou gerar QR pelo chatbot: compartilhar WAHA já conectado.
-      const data = await wahaMaster("status");
+      const data = await botmgWahaConnect();
       return json({
         ok: true,
         connection: {
-          instanceName: "nexos_master_primary",
-          connected: data?.connected === true,
-          state: String(data?.state ?? (data?.connected ? "open" : "close")),
+          instanceName: BOTMG_WAHA_SESSION,
+          connected: data.connected,
+          state: data.state,
           provider: "waha",
-          qr: null,
+          qr: data.qr,
           pairingCode: null,
         },
       });
