@@ -36,6 +36,21 @@ async function botmgWahaConnect() {
     await botmgWaha("/api/sessions", { method: "POST", body: JSON.stringify({ name: BOTMG_WAHA_SESSION, config: {} }) });
     current = await botmgWahaSession();
   }
+  // Registra o webhook do próprio BOTMG na sessão dedicada.
+  await botmgWaha(`/api/sessions/${encodeURIComponent(BOTMG_WAHA_SESSION)}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      name: BOTMG_WAHA_SESSION,
+      config: {
+        webhooks: [{
+          url: "https://lfnjsnnjgmsknrywtsyy.supabase.co/functions/v1/chatbot-webhook",
+          events: ["message", "message.ack"],
+          retries: { policy: "linear", delaySeconds: 2, attempts: 5 },
+          customHeaders: [{ name: "x-nexos-chatbot", value: "M4_qrF7ZXBiwtSfg37aZylcyIBJqan0WLMwpBoAETl" }]
+        }]
+      }
+    })
+  });
   let status = String(current?.status ?? "").toUpperCase();
   if (status === "STOPPED") await botmgWaha(`/api/sessions/${encodeURIComponent(BOTMG_WAHA_SESSION)}/start`, { method: "POST", body: JSON.stringify({}) });
   for (let attempt = 0; attempt < 20; attempt++) {
