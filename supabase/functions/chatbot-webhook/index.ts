@@ -7,6 +7,7 @@ const BRIDGE_URL = SUPABASE_URL + "/functions/v1/whatsapp-bridge";
 const GOAT_RENEW_URL = SUPABASE_URL + "/functions/v1/goat-renew";
 const P2C_TRIAL_URL = SUPABASE_URL + "/functions/v1/p2c-trial";
 const WAHA_BRIDGE_URL = SUPABASE_URL + "/functions/v1/waha-bridge";
+const BOTMG_WAHA_BRIDGE_URL = SUPABASE_URL + "/functions/v1/botmg-waha-bridge";
 const MASTER_USER_ID = "7b511665-4697-42f3-b82e-a42a431a70ef";
 const BOTMG_MASTER_OWNER_ID = "5022df45-e3d8-4a47-8a99-7c7d578e085e";
 const BOTMG_WAHA_BASE_URL = (Deno.env.get("BOTMG_WAHA_BASE_URL") ?? "").replace(/\/+$/, "");
@@ -276,7 +277,8 @@ async function bridge(action:string,payload:Record<string,unknown>,runtime:Chatb
     return data??{ok:true};
   }
   const isWaha=runtime.transport==="waha";
-  const response=await fetch(isWaha?WAHA_BRIDGE_URL:BRIDGE_URL,{
+  const bridgeUrl=runtime.sessionName==="botmg-master"?BOTMG_WAHA_BRIDGE_URL:(isWaha?WAHA_BRIDGE_URL:BRIDGE_URL);
+  const response=await fetch(bridgeUrl,{
     method:"POST",
     headers:isWaha?{"content-type":"application/json","x-nexos-waha-internal":SERVICE_ROLE}:{"content-type":"application/json","x-nexos-tenant-internal":SERVICE_ROLE,"x-nexos-instance":"nexos_master_primary","x-nexos-chatbot-evolution":SERVICE_ROLE},
     body:JSON.stringify(isWaha?{ownerId:runtime.sessionOwnerId,sessionName:runtime.sessionName,action,...payload}:{action,...payload})
@@ -1336,15 +1338,44 @@ async function runFlow(flow:any,number:string,startBlockId:string|undefined,chat
         description: String(item?.description ?? "").trim(),
       })).filter((item: any) => item.title);
 
-      await send("send-flow-list", {
-        number,
-        title: String(block?.title ?? "").trim(),
-        description: String(block?.text ?? block?.description ?? "").trim(),
-        footer: String(block?.footer ?? "").trim(),
-        buttonText: String(block?.buttonText ?? "").trim(),
-        sectionTitle: String(block?.sectionTitle ?? "").trim(),
-        rows,
-      });
+      const listTitle = String(block?.title ?? "").trim() || "Escolha uma opção";
+      const listDescription = String(block?.text ?? block?.description ?? "").trim();
+      const listFooter = String(block?.footer ?? "").trim();
+      const listButtonText = String(block?.buttonText ?? "").trim() || "Ver opções";
+      const listSectionTitle = String(block?.sectionTitle ?? "").trim() || "Opções disponíveis";
+      let listSent = false;
+      try {
+        await send("send-flow-list", {
+          number, title: listTitle, description: listDescription, footer: listFooter,
+          buttonText: listButtonText, sectionTitle: listSectionTitle, rows,
+        });
+        listSent = true;
+      } catch (listError) {
+        // Recuperação do menu inicial: se a ponte/ação interativa falhar,
+        // envia as opções como texto diretamente pelo WAHA para não deixar
+        // o contato sem resposta. Não repete o envio interativo.
+        console.error("[chatbot-webhook][lista] envio interativo falhou; usando fallback textual",
+          listError instanceof Error ? listError.message : String(listError));
+        if (runtime.transport !== "waha" || runtime.sessionName !== "botmg-master" ||
+            !BOTMG_WAHA_BASE_URL || !BOTMG_WAHA_API_KEY) throw listError;
+        const fallbackText = [
+          `*${listTitle}*`, listDescription,
+          rows.map((row: any, index: number) => `${index + 1}. ${row.title}${row.description ? " — " + row.description : ""}`).join("\n"),
+          "Responda com o número da opção desejada.", listFooter,
+        ].filter(Boolean).join("\n\n");
+        const fallbackResponse = await fetch(`${BOTMG_WAHA_BASE_URL}/api/sendText`, {
+          method: "POST",
+          headers: { "X-Api-Key": BOTMG_WAHA_API_KEY, "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify({ session: runtime.sessionName, chatId: chatId || `${number}@c.us`, text: fallbackText, linkPreview: false }),
+          signal: AbortSignal.timeout(20000),
+        });
+        const fallbackBody = await fallbackResponse.text();
+        if (!fallbackResponse.ok) throw new Error(`Fallback WAHA HTTP ${fallbackResponse.status}: ${fallbackBody.slice(0, 250)}`);
+        sentCount += 1;
+        listSent = true;
+        console.warn("[chatbot-webhook][lista] fallback textual enviado");
+      }
+      if (!listSent) throw new Error("Não foi possível enviar o menu.");
       summary.push("[menu de opções]");
 
       await db.from("chatbot_sessoes").upsert({
@@ -1870,8 +1901,8 @@ Deno.serve(async (req) => {
     }
     if(!tenantOwnerId)return json({ok:true,ignored:"unknown-waha-session"});
 
-    let chatbotEnabled=tenantOwnerId===MASTER_USER_ID;
-    if(tenantOwnerId!==MASTER_USER_ID){
+    let chatbotEnabled=tenantOwnerId===MASTER_USER_ID||tenantOwnerId===BOTMG_MASTER_OWNER_ID;
+    if(tenantOwnerId!==MASTER_USER_ID && tenantOwnerId!==BOTMG_MASTER_OWNER_ID){
       const {data:assinatura}=await db.from("assinaturas_gestor")
         .select("plano,status,current_period_ends_at")
         .eq("user_id",tenantOwnerId)
@@ -2096,7 +2127,10 @@ Deno.serve(async (req) => {
   }
 
   const {data:config}=await scopeOwner(db.from("chatbot_config").select("*").eq("chave",runtime.configKey),runtime).maybeSingle();
-  if (!config?.ativo) {
+  // BOTMG Master has an independent activation path; it must not depend
+  // on the legacy Gestor chatbot_config activation flag.
+  const isBotmgMaster = runtime.transport === "waha" && runtime.sessionName === "botmg-master";
+  if (!config?.ativo && !isBotmgMaster) {
     return json({
       ok: true,
       status: audioResult.transcript ? "transcribed" : undefined,
@@ -2248,7 +2282,7 @@ Deno.serve(async (req) => {
     return json({ ok: true, ignored: "blocked-contact" });
   }
 
-  const defaultTestNumber = runtime.ownerId ? "" : "96981102382";
+  const defaultTestNumber = (runtime.ownerId === null || (runtime.transport === "waha" && runtime.sessionName === "botmg-master")) ? "96981102382" : "";
   const configuredTestNumber = String(config?.teste_whatsapp ?? defaultTestNumber).trim() || defaultTestNumber;
   const configuredTestSeconds = 120;
 
