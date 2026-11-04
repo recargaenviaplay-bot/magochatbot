@@ -8,6 +8,9 @@ const GOAT_RENEW_URL = SUPABASE_URL + "/functions/v1/goat-renew";
 const P2C_TRIAL_URL = SUPABASE_URL + "/functions/v1/p2c-trial";
 const WAHA_BRIDGE_URL = SUPABASE_URL + "/functions/v1/waha-bridge";
 const MASTER_USER_ID = "7b511665-4697-42f3-b82e-a42a431a70ef";
+const BOTMG_MASTER_OWNER_ID = "5022df45-e3d8-4a47-8a99-7c7d578e085e";
+const BOTMG_WAHA_BASE_URL = (Deno.env.get("BOTMG_WAHA_BASE_URL") ?? "").replace(/\/+$/, "");
+const BOTMG_WAHA_API_KEY = Deno.env.get("BOTMG_WAHA_API_KEY") ?? "";
 type ChatbotRuntime={ownerId:string|null;sessionOwnerId:string;transport:"evolution"|"waha";sessionName:string;configKey:string;chatbotEnabled:boolean};
 function scopeOwner(query:any,runtime:ChatbotRuntime){return runtime.ownerId?query.eq("owner_id",runtime.ownerId):query.is("owner_id",null)}
 function scopeSession(query:any,runtime:ChatbotRuntime){return query.eq("owner_id",runtime.sessionOwnerId)}
@@ -259,6 +262,19 @@ function getSelectionId(message: any, seen = new Set<any>()): string {
 }
 
 async function bridge(action:string,payload:Record<string,unknown>,runtime:ChatbotRuntime){
+  if(runtime.transport==="waha" && runtime.sessionName==="botmg-master" && ["send-text","send-group-text"].includes(action)){
+    if(!BOTMG_WAHA_BASE_URL || !BOTMG_WAHA_API_KEY) throw new Error("WAHA do BOTMG não configurado.");
+    const chatId=String(payload.chatId??payload.number??"").trim();
+    const response=await fetch(`${BOTMG_WAHA_BASE_URL}/api/sendText`,{
+      method:"POST",
+      headers:{"X-Api-Key":BOTMG_WAHA_API_KEY,"Content-Type":"application/json","Accept":"application/json"},
+      body:JSON.stringify({session:runtime.sessionName,chatId,text:String(payload.text??"")}),
+      signal:AbortSignal.timeout(30000),
+    });
+    const raw=await response.text();let data:any=null;try{data=raw?JSON.parse(raw):null}catch{data=raw}
+    if(!response.ok)throw new Error(String(data?.message??data?.error??`WAHA HTTP ${response.status}`));
+    return data??{ok:true};
+  }
   const isWaha=runtime.transport==="waha";
   const response=await fetch(isWaha?WAHA_BRIDGE_URL:BRIDGE_URL,{
     method:"POST",
@@ -1830,7 +1846,9 @@ Deno.serve(async (req) => {
   let runtime:ChatbotRuntime;
   if(wahaSession){
     let tenantOwnerId="";
-    if(wahaSession==="nexos_master_primary"||wahaSession==="nexos_master_aux"){
+    if(wahaSession==="botmg-master"){
+      tenantOwnerId=BOTMG_MASTER_OWNER_ID;
+    }else if(wahaSession==="nexos_master_primary"||wahaSession==="nexos_master_aux"){
       tenantOwnerId=MASTER_USER_ID;
     }else{
       const {data:provider}=await db.from("whatsapp_provider_config")
