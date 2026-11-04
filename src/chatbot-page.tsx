@@ -38,6 +38,8 @@ import {
   ZoomIn,
   ZoomOut,
   Maximize2,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 import { useConfirm } from "@/components/nexos/ConfirmDialog";
@@ -185,6 +187,7 @@ type FlowBlock = {
   copyCode?: string;
   template?: Row | null;
   templateId?: string;
+  optionsMode?: "none" | "buttons" | "list";
   mediaUrl?: string;
   mediaType?: string;
   nextId?: string;
@@ -450,6 +453,12 @@ export function ChatbotPage() {
   const [templateTitle, setTemplateTitle] = useState("");
   const [templateContent, setTemplateContent] = useState("");
   const [templateImage, setTemplateImage] = useState<File | null>(null);
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [templateOptionMode, setTemplateOptionMode] = useState<"none" | "buttons" | "list">("none");
+  const [templateOptions, setTemplateOptions] = useState<Array<{id:string;label:string;description?:string}>>([]);
+  const [templateButtonText, setTemplateButtonText] = useState("Ver opções");
+  const [templateSectionTitle, setTemplateSectionTitle] = useState("Opções disponíveis");
+  const [templateFooter, setTemplateFooter] = useState("");
   const [editingTemplateId, setEditingTemplateId] = useState("");
   const [editingTemplateMediaPath, setEditingTemplateMediaPath] = useState("");
   const [editingTemplateMediaName, setEditingTemplateMediaName] = useState("");
@@ -468,17 +477,27 @@ export function ChatbotPage() {
   const [selectedId, setSelectedId] = useState<string>("");
   const [draft, setDraft] = useState<FlowDraft | null>(null);
   const [search, setSearch] = useState("");
-  const [sidebarTab, setSidebarTab] = useState<"typebot" | "fluxos" | "comandos" | "templates" | "respostas" | "configuracoes" | "status">(() => {
+  const [sidebarTab, setSidebarTab] = useState<"typebot" | "fluxos" | "comandos" | "whatsapp" | "templates" | "respostas" | "configuracoes" | "status">(() => {
     if (typeof window === "undefined") return "typebot";
     const saved = window.sessionStorage.getItem("nexos:chatbot:sidebar-tab");
-    return ["typebot","fluxos","comandos","templates","respostas","configuracoes","status"].includes(String(saved))
-      ? saved as "typebot" | "fluxos" | "comandos" | "templates" | "respostas" | "configuracoes" | "status"
+    return ["typebot","fluxos","comandos","whatsapp","templates","respostas","configuracoes","status"].includes(String(saved))
+      ? saved as "typebot" | "fluxos" | "comandos" | "whatsapp" | "templates" | "respostas" | "configuracoes" | "status"
       : "typebot";
   });
   const [focusedBlockId, setFocusedBlockId] = useState("");
   const [addMenuBlockId, setAddMenuBlockId] = useState("");
   const [canvasZoom, setCanvasZoom] = useState(1);
   const [workspaceNavCollapsed, setWorkspaceNavCollapsed] = useState(false);
+  const [uiTheme, setUiTheme] = useState<"light" | "dark">(() => {
+    if (typeof window === "undefined") return "light";
+    return window.localStorage.getItem("botmg:theme") === "dark" ? "dark" : "light";
+  });
+  useEffect(() => {
+    window.localStorage.setItem("botmg:theme", uiTheme);
+    document.documentElement.classList.toggle("light", uiTheme === "light");
+    document.documentElement.classList.toggle("dark", uiTheme === "dark");
+    document.documentElement.style.colorScheme = uiTheme;
+  }, [uiTheme]);
   const [canvasPanKey, setCanvasPanKey] = useState(false);
   const [blockEditorOpen, setBlockEditorOpen] = useState(false);
   const [canvasAddOpen, setCanvasAddOpen] = useState(false);
@@ -556,6 +575,12 @@ export function ChatbotPage() {
         return;
       }
 
+      if ((event.metaKey || event.ctrlKey) && ["+","=","-"].includes(event.key)) {
+        event.preventDefault();
+        setCanvasZoom((value) => Math.max(0.45, Math.min(1.8, Number((value + (event.key === "-" ? -0.1 : 0.1)).toFixed(2)))));
+        return;
+      }
+
       if (event.key === "+" || event.key === "=") {
         event.preventDefault();
         setCanvasZoom((value) => Math.min(1.8, Number((value + 0.1).toFixed(2))));
@@ -614,8 +639,9 @@ export function ChatbotPage() {
       setEvolutionConnection((current) => ({
         ...current,
         ...next,
-        qr: next.connected === true ? null : current.qr,
-        pairingCode: next.connected === true ? null : current.pairingCode,
+        qr: next.connected === true ? null : (next.qr ?? current.qr),
+        pairingCode: next.connected === true ? null : (next.pairingCode ?? current.pairingCode),
+        state: next.state ?? current.state,
       }));
     } catch (error) {
       if (showError) {
@@ -631,13 +657,11 @@ export function ChatbotPage() {
     setConnectingEvolution(true);
     try {
       let data = await chatbotAdmin("evolution-connect");
-      // The tenant WAHA session may be STARTING before a QR exists. Retry
-      // only the safe connection-read operation; never logout/restart sessions.
-      if (chatbotMode === "tenant") {
-        for (let attempt = 0; attempt < 4 && !data?.connection?.connected && !data?.connection?.qr && !data?.connection?.pairingCode; attempt += 1) {
-          await new Promise((resolve) => window.setTimeout(resolve, 1800));
-          data = await chatbotAdmin("evolution-connect");
-        }
+      // WAHA can take several seconds to publish the QR. Retry in every
+      // BOTMG mode; only read/start the isolated BOTMG session.
+      for (let attempt = 0; attempt < 8 && !data?.connection?.connected && !data?.connection?.qr && !data?.connection?.pairingCode; attempt += 1) {
+        await new Promise((resolve) => window.setTimeout(resolve, 1500));
+        data = await chatbotAdmin("evolution-connect");
       }
       const next = data?.connection ?? {};
       setEvolutionConnection({
@@ -652,8 +676,10 @@ export function ChatbotPage() {
         toast.success("WhatsApp do Chatbot conectado.");
       } else if (next.qr || next.pairingCode) {
         toast.info("Escaneie o QR para conectar o Chatbot.");
+      } else if (next.qrError) {
+        toast.error("WAHA não entregou o QR Code: " + String(next.qrError));
       } else {
-        toast.info("A conexão está sendo preparada. Clique novamente para atualizar o QR Code.");
+        toast.info("WAHA ainda está preparando o QR Code. Use Atualizar em alguns segundos.");
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Não foi possível conectar o WhatsApp do Chatbot.");
@@ -805,7 +831,6 @@ export function ChatbotPage() {
         if(commandImage.size>5*1024*1024)throw new Error("Imagem maior que 5 MB.");
         const file=await normalizeImageForWhatsApp(commandImage);
         const ext=file.type==="image/png"?"png":file.type==="image/webp"?"webp":"jpg";
-        // O Storage aplica RLS pela primeira pasta: ela precisa ser o UUID do usuário autenticado.
         uploadedPath=`${user.id}/comandos/${crypto.randomUUID()}/imagem.${ext}`;
         const {error}=await supabase.storage.from("mensagens-midia").upload(uploadedPath,file,{
           upsert:false,contentType:file.type||"image/jpeg",
@@ -875,7 +900,7 @@ export function ChatbotPage() {
   }
 
   useEffect(()=>{
-    if(sidebarTab==="comandos"&&chatbotMode==="master"){
+    if(sidebarTab==="comandos"){
       void loadCommands();
       if(!groups.length)void loadGroups();
     }
@@ -1167,9 +1192,9 @@ export function ChatbotPage() {
 
     setTestingAvisos(true);
     try {
-      await chatbotAdmin("test-group-send", {
+      await telegramAccountAction("test_avisos_whatsapp", {
         text,
-        chatId: statusSync.whatsapp_destino_id,
+        whatsapp_destino_id: statusSync.whatsapp_destino_id,
       });
       toast.success("Mensagem enviada para o WhatsApp.");
       setAvisosTestText("");
@@ -1820,6 +1845,12 @@ export function ChatbotPage() {
     setEditingTemplateId("");
     setEditingTemplateMediaPath("");
     setEditingTemplateMediaName("");
+    setTemplateOptionMode("none");
+    setTemplateOptions([]);
+    setTemplateButtonText("Ver opções");
+    setTemplateSectionTitle("Opções disponíveis");
+    setTemplateFooter("");
+    setTemplateDialogOpen(false);
   }
 
   function editChatbotTemplate(template: Row) {
@@ -1829,6 +1860,13 @@ export function ChatbotPage() {
     setTemplateImage(null);
     setEditingTemplateMediaPath(String(template.midia_url ?? ""));
     setEditingTemplateMediaName(String(template.midia_nome ?? ""));
+    const options = template.chatbot_opcoes && typeof template.chatbot_opcoes === "object" ? template.chatbot_opcoes : {};
+    setTemplateOptionMode(options.mode === "buttons" || options.mode === "list" ? options.mode : "none");
+    setTemplateOptions(Array.isArray(options.items) ? options.items.map((item: any) => ({ id:String(item.id ?? uid("opt")), label:String(item.label ?? ""), description:String(item.description ?? "") })) : []);
+    setTemplateButtonText(String(options.buttonText ?? "Ver opções"));
+    setTemplateSectionTitle(String(options.sectionTitle ?? "Opções disponíveis"));
+    setTemplateFooter(String(options.footer ?? ""));
+    setTemplateDialogOpen(true);
   }
 
   function applyTemplateUpdateToBlocks(
@@ -1867,10 +1905,24 @@ export function ChatbotPage() {
       toast.error("Digite o nome do template.");
       return;
     }
-    if (!conteudo) {
-      toast.error("Digite a mensagem do template.");
+    if (!conteudo && !templateImage && !editingTemplateMediaPath) {
+      toast.error("Adicione um texto ou uma imagem ao modelo.");
       return;
     }
+    const validOptions = templateOptions.filter((item) => item.label.trim());
+    if (templateOptionMode === "buttons" && (validOptions.length < 1 || validOptions.length > 3)) {
+      toast.error("Os botões rápidos precisam ter de 1 a 3 opções."); return;
+    }
+    if (templateOptionMode === "list" && (validOptions.length < 1 || validOptions.length > 10)) {
+      toast.error("A lista precisa ter de 1 a 10 opções."); return;
+    }
+    const chatbot_opcoes = {
+      mode: templateOptionMode,
+      items: validOptions.map((item) => ({ id: item.id, label: item.label.trim(), ...(item.description?.trim() ? { description: item.description.trim() } : {}) })),
+      buttonText: templateButtonText.trim() || "Ver opções",
+      sectionTitle: templateSectionTitle.trim() || "Opções disponíveis",
+      footer: templateFooter.trim(),
+    };
 
     setCreatingTemplate(true);
     let uploadedPath = "";
@@ -1903,6 +1955,7 @@ export function ChatbotPage() {
           titulo,
           conteudo,
           updated_at: new Date().toISOString(),
+          chatbot_opcoes,
         };
 
         if (uploadedPath) {
@@ -1969,6 +2022,7 @@ export function ChatbotPage() {
           .insert({
             titulo,
             conteudo,
+            chatbot_opcoes,
             categoria: "chatbot",
             ativo: true,
             midia_url: uploadedPath || null,
@@ -2154,6 +2208,13 @@ export function ChatbotPage() {
     const patch: Partial<FlowBlock> = {
       template: { ...selected },
       templateId: String(selected.id),
+      optionsMode: String(selected.chatbot_opcoes?.mode ?? "none"),
+      buttons: selected.chatbot_opcoes?.mode === "buttons" ? (selected.chatbot_opcoes.items ?? []).map((item: any) => ({ id:String(item.id), label:String(item.label), type:"reply" as const })) : [],
+      items: selected.chatbot_opcoes?.mode === "list" ? (selected.chatbot_opcoes.items ?? []).map((item: any) => ({ id:String(item.id), label:String(item.label), description:String(item.description ?? "") })) : [],
+      buttonText: String(selected.chatbot_opcoes?.buttonText ?? "Ver opções"),
+      sectionTitle: String(selected.chatbot_opcoes?.sectionTitle ?? "Opções disponíveis"),
+      optionsFooter: String(selected.chatbot_opcoes?.footer ?? ""),
+      optionsTitle: String(selected.titulo ?? ""),
     };
     if (selected["midia_url"]) {
       try {
@@ -2642,32 +2703,26 @@ export function ChatbotPage() {
   }
 
   return (
-    <>
-      <div className="mb-6 w-full pt-1 md:mb-7 md:pt-5">
-        <div className="border-b border-border/55 pb-4 md:pb-5">
-          <div className="min-w-0">
-            <h1 className="break-words text-[1.75rem] font-semibold leading-none tracking-[-0.035em] text-foreground sm:text-[1.9rem] md:text-[2rem]">Chatbot</h1>
-            <p className="mt-2 max-w-2xl break-words text-[13px] leading-5 text-muted-foreground/75">Crie fluxos visuais de atendimento para o WhatsApp, no estilo Typebot.</p>
+    <div className="min-h-screen w-full bg-background text-foreground">
+      <header className="mb-3 flex min-h-[58px] w-full items-center justify-between gap-4 border-b border-border/70 px-1 pb-3 pt-2">
+        <h1 className="shrink-0 text-[25px] font-black leading-none tracking-[-0.085em] text-foreground">BOT<span className="font-semibold tracking-[-0.075em]">MG</span></h1>
+        <div className="flex shrink-0 items-center gap-3">
+          <button type="button" onClick={() => setUiTheme((current) => current === "light" ? "dark" : "light")} className="flex size-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition hover:bg-muted hover:text-foreground" title={uiTheme === "light" ? "Ativar tema escuro" : "Ativar tema claro"} aria-label={uiTheme === "light" ? "Ativar tema escuro" : "Ativar tema claro"}>
+            {uiTheme === "light" ? <Moon className="size-4" /> : <Sun className="size-4" />}
+          </button>
+          <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2">
+            <span className={`size-2 rounded-full ${config.ativo ? "bg-emerald-500" : "bg-muted-foreground/50"}`} />
+            <span className="text-xs font-medium">{config.ativo ? "Bot ativo" : "Bot desativado"}</span>
+            <Switch checked={config.ativo} onCheckedChange={(checked) => void saveConfig({ ativo: checked })} />
           </div>
         </div>
-        <div className="flex w-full flex-wrap items-center gap-2 pt-4 sm:justify-end">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
-              <Bot className="size-4 text-primary" />
-              <span className="text-sm font-medium">{config.ativo ? "Bot ativo" : "Bot desativado"}</span>
-              <Switch checked={config.ativo} onCheckedChange={(checked) => void saveConfig({ ativo: checked })} />
-            </div>
-            <Button onClick={newFlow} className="gap-2">
-              <Plus className="size-4" /> Add no projeto
-            </Button>
-          </div>
-        </div>
-      </div>
+      </header>
 
+      {sidebarTab === "whatsapp" ? (
       <div className="mb-4 overflow-hidden rounded-2xl border border-border bg-card">
         <div className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between">
           <div className="flex min-w-0 items-start gap-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground">
               <Bot className="size-5" />
             </span>
             <div className="min-w-0">
@@ -2687,7 +2742,7 @@ export function ChatbotPage() {
               <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                 {chatbotMode === "tenant"
                   ? "Conecte seu WhatsApp aqui para ativar o atendimento automático do Chatbot."
-                  : "O chatbot Master utiliza o WhatsApp principal do Gestor (WAHA). As conexões das revendas são independentes."}
+                  : "Conecte o WhatsApp exclusivo do BOTMG. Esta sessão é independente do Gestor Nexos."}
               </p>
             </div>
           </div>
@@ -2709,9 +2764,7 @@ export function ChatbotPage() {
                 type="button"
                 className="gap-2"
                 disabled={connectingEvolution || loadingEvolution}
-                onClick={() => chatbotMode === "master"
-                  ? void loadEvolutionConnection(true)
-                  : void connectEvolution()}
+                onClick={() => void connectEvolution()}
               >
                 <Bot className="size-4" />
                 {chatbotMode === "master"
@@ -2767,6 +2820,7 @@ export function ChatbotPage() {
           </div>
         ) : null}
       </div>
+      ) : null}
 
       {sidebarTab !== "typebot" ? (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card px-3 py-3">
@@ -2790,64 +2844,33 @@ export function ChatbotPage() {
       ) : null}
 
       <div
-        className={`grid min-h-[660px] w-full min-w-0 max-w-full gap-2 xl:gap-3 ${
-          workspaceNavCollapsed
-            ? "xl:grid-cols-[64px_minmax(0,1fr)]"
-            : "xl:grid-cols-[176px_minmax(0,1fr)]"
-        }`}
+        className="flex min-h-[calc(100vh-150px)] w-full min-w-0 max-w-full items-stretch gap-3"
       >
-        <nav className="relative z-20 row-start-1 min-w-0 max-w-full xl:col-start-1 xl:row-start-1">
-          <div className={`sticky top-4 flex w-full max-w-full gap-2 overflow-x-auto overflow-y-hidden rounded-2xl border border-border bg-card p-2 shadow-sm xl:flex-col xl:overflow-visible ${workspaceNavCollapsed ? "xl:px-1.5" : ""}`}>
-            <div className="hidden items-center justify-end border-b border-border/70 pb-2 xl:flex">
-              <button
-                type="button"
-                onClick={toggleWorkspaceNav}
-                className={`flex h-8 items-center rounded-lg border border-border bg-background/40 text-muted-foreground transition hover:border-primary/30 hover:text-foreground ${workspaceNavCollapsed ? "w-full justify-center px-0" : "gap-2 px-2"}`}
-                title={workspaceNavCollapsed ? "Abrir menu do Chatbot" : "Fechar menu do Chatbot"}
-              >
-                {workspaceNavCollapsed ? <PanelLeftOpen className="size-3.5" /> : <PanelLeftClose className="size-3.5" />}
-                {!workspaceNavCollapsed ? <span className="text-[10px] font-medium">Recolher</span> : null}
-              </button>
-            </div>
+        <nav className="relative z-20 -ml-1 min-h-[calc(100vh-78px)] w-[220px] min-w-[220px] max-w-[220px] shrink-0 border-r border-border/70 pr-3 max-md:w-[68px] max-md:min-w-[68px] max-md:max-w-[68px]">
+          <div className="flex min-h-[calc(100vh-78px)] w-full flex-col gap-1 overflow-y-auto overflow-x-hidden bg-background px-1 py-3">
             {([
-              ["typebot", "TypeBot", GitBranch, "Monte o atendimento arrastando e ligando blocos"],
+              ["typebot", "BOT", GitBranch, "Monte o atendimento arrastando e ligando blocos"],
               ["fluxos", "Fluxos", List, "Veja todos os fluxos e escolha qual editar"],
-              ["comandos", "Comandos", MessageSquareText, "Respostas automáticas em grupos por palavra-chave"],
-              ["configuracoes", "Configurações", Settings2, "Gatilhos, público e regras do fluxo"],
-              ["status", "Status WhatsApp", Send, "Telegram → Status e grupos"],
+              ["comandos", "Comandos", MessageSquareText, "Respostas automáticas por hashtags e palavras-chave"],
+              ["whatsapp", "WhatsApp", Bot, "Conexão, QR Code e estado da sessão"],
+              ["templates", "Mensagens prontas", Zap, "Textos e mídias reutilizáveis"],
+              ["respostas", "Blocos e respostas", FileText, "Elementos disponíveis no construtor"],
+              ["status", "Status", Send, "Telegram → Status e grupos"],
+              ["configuracoes", "Ajustes", Settings2, "Regras, gatilhos e comportamento do bot"],
             ] as const)
-              .filter(([tab]) => chatbotMode === "master" || (tab !== "status" && tab !== "comandos"))
+              .filter(([tab]) => chatbotMode === "master" || tab !== "status")
               .map(([tab, label, Icon, description]) => (
               <button
                 key={tab}
                 type="button"
                 title={label}
                 onClick={() => setSidebarTab(tab)}
-                className={`flex min-h-12 min-w-[150px] shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left transition xl:min-w-0 xl:w-full ${workspaceNavCollapsed ? "xl:justify-center xl:px-1" : ""} ${
-                  sidebarTab === tab
-                    ? "bg-primary/12 text-primary"
-                    : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
-                }`}
+                className={`group flex min-h-10 w-full shrink-0 items-center justify-start gap-3 rounded-lg px-3 py-2 text-left transition max-md:justify-center max-md:px-1 ${sidebarTab === tab ? "bg-muted text-foreground shadow-sm" : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"}`}
               >
-                <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${
-                  tab === "typebot"
-                    ? "bg-sky-500/15 text-sky-400"
-                    : tab === "fluxos"
-                      ? "bg-violet-500/15 text-violet-400"
-                      : tab === "configuracoes"
-                        ? "bg-amber-500/15 text-amber-400"
-                        : tab === "comandos"
-                          ? "bg-cyan-500/15 text-cyan-400"
-                        : "bg-emerald-500/15 text-emerald-400"
-                }`}>
-                  <Icon className="size-4.5 shrink-0" />
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-md text-current">
+                  <Icon className="size-[17px] shrink-0" />
                 </span>
-                <span className={`min-w-0 ${workspaceNavCollapsed ? "xl:hidden" : ""}`}>
-                  <span className="block whitespace-nowrap text-sm font-semibold">{label}</span>
-                  <span className="mt-0.5 hidden text-[10px] leading-4 text-muted-foreground xl:block">
-                    {description}
-                  </span>
-                </span>
+                <span className="truncate text-[13px] font-medium max-md:hidden">{label === "Mensagens prontas" ? "Modelos" : label === "Blocos e respostas" ? "Blocos" : label}</span>
               </button>
             ))}
 
@@ -2873,7 +2896,7 @@ export function ChatbotPage() {
           </div>
         </nav>
 
-        <aside className={`${["fluxos", "templates", "respostas"].includes(sidebarTab) ? "" : "hidden"} row-start-2 min-w-0 max-w-full overflow-hidden rounded-2xl border border-border bg-card xl:col-start-2 xl:row-start-1`}>
+        <aside className={`${["fluxos", "templates", "respostas"].includes(sidebarTab) ? "" : "hidden"} w-[320px] min-w-[280px] max-w-[36%] shrink-0 overflow-hidden rounded-2xl border border-border bg-card`}>
           {sidebarTab === "fluxos" ? (
             <>
               <div className="border-b border-border p-4">
@@ -2929,158 +2952,57 @@ export function ChatbotPage() {
 
           {sidebarTab === "templates" ? (
             <div className="max-h-[665px] overflow-y-auto">
-              <div className="border-b border-border p-4">
-                <h2 className="font-semibold">Templates</h2>
-                <p className="mt-1 text-xs text-muted-foreground">Crie templates exclusivos do Chatbot.</p>
+              <div className="flex items-center justify-between gap-3 border-b border-border p-4">
+                <div><h2 className="font-semibold">Modelos</h2><p className="mt-1 text-xs text-muted-foreground">Mensagens prontas com mídia e opções interativas.</p></div>
+                <Button size="sm" className="gap-2" onClick={() => { resetTemplateEditor(); setTemplateDialogOpen(true); }}><Plus className="size-4"/> Criar modelo</Button>
               </div>
-
-              <div className="space-y-3 p-3">
-                <div className="rounded-xl border border-border bg-background/20 p-3">
-                  <div className="mb-3 flex items-center justify-between gap-2">
-                    <p className="text-sm font-semibold">{editingTemplateId ? "Editar template" : "Criar template"}</p>
-                    {editingTemplateId ? (
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 px-2 text-xs"
-                        disabled={creatingTemplate}
-                        onClick={resetTemplateEditor}
-                      >
-                        Cancelar
-                      </Button>
-                    ) : null}
-                  </div>
-                  <div className="space-y-2">
-                    <Input
-                      value={templateTitle}
-                      onChange={(e) => setTemplateTitle(e.target.value)}
-                      placeholder="Nome do template"
-                    />
-                    <Textarea
-                      value={templateContent}
-                      onChange={(e) => setTemplateContent(e.target.value)}
-                      placeholder="Digite a legenda / mensagem..."
-                      rows={5}
-                    />
-                    <p className="text-[11px] text-muted-foreground">
-                      Formatação do WhatsApp: <strong>*negrito*</strong>, _itálico_, ~riscado~ e ```monoespaçado```.
-                    </p>
-
-                    <div className="space-y-2 rounded-lg border border-border bg-background/20 p-3">
-                      <Label htmlFor="chatbot-template-image">
-                        {editingTemplateId ? "Trocar imagem do template (opcional)" : "Imagem do template (opcional)"}
-                      </Label>
-                      {editingTemplateId && editingTemplateMediaPath && !templateImage ? (
-                        <div className="flex items-center gap-2 rounded-md border border-border px-2 py-2">
-                          <ImageIcon className="size-4 shrink-0 text-primary" />
-                          <span className="min-w-0 flex-1 truncate text-xs">
-                            Imagem atual: {editingTemplateMediaName || "imagem"}
-                          </span>
-                        </div>
-                      ) : null}
-                      <Input
-                        key={templateImage ? `${templateImage.name}-${templateImage.lastModified}` : "sem-imagem"}
-                        id="chatbot-template-image"
-                        type="file"
-                        accept="image/*"
-                        disabled={creatingTemplate}
-                        onClick={(e) => {
-                          e.currentTarget.value = "";
-                        }}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0] ?? null;
-                          if (file && !file.type.startsWith("image/")) {
-                            toast.error("Selecione um arquivo de imagem válido.");
-                            setTemplateImage(null);
-                            return;
-                          }
-                          setTemplateImage(file);
-                        }}
-                      />
-                      {templateImage ? (
-                        <div className="flex items-center gap-2 rounded-md border border-border px-2 py-2">
-                          <ImageIcon className="size-4 shrink-0 text-primary" />
-                          <span className="min-w-0 flex-1 truncate text-xs">{templateImage.name}</span>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 px-2 text-xs"
-                            disabled={creatingTemplate}
-                            onClick={() => setTemplateImage(null)}
-                          >
-                            Remover
-                          </Button>
-                        </div>
-                      ) : (
-                        <p className="text-xs text-muted-foreground">
-                          {editingTemplateId && editingTemplateMediaPath
-                            ? "A imagem atual será mantida. Se escolher outra, ela será substituída."
-                            : "Se adicionar uma imagem, o texto acima será enviado como legenda junto da imagem."}
-                        </p>
-                      )}
-                    </div>
-
-                    <Button
-                      size="sm"
-                      className="w-full gap-2"
-                      disabled={creatingTemplate}
-                      onClick={() => void saveChatbotTemplate()}
-                    >
-                      {editingTemplateId ? <Save className="size-3.5" /> : <Plus className="size-3.5" />}
-                      {creatingTemplate
-                        ? "Salvando..."
-                        : editingTemplateId
-                          ? "Salvar alterações"
-                          : "Criar template"}
-                    </Button>
-                  </div>
-                </div>
-
-                {templates.length > 0 ? (
-                  <div className="space-y-2">
-                    <p className="px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Templates criados</p>
-                    {templates.map((template) => (
-                      <div key={String(template.id)} className="rounded-xl border border-border bg-background/20 p-3">
-                        <div className="flex items-center gap-2">
-                          <p className="min-w-0 flex-1 truncate text-sm font-semibold">{String(template.titulo ?? "Template")}</p>
-                          {String(template.midia_tipo ?? "") === "imagem" ? (
-                            <Badge variant="outline" className="shrink-0 text-[10px]">imagem</Badge>
-                          ) : null}
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="size-8 shrink-0"
-                            onClick={() => editChatbotTemplate(template)}
-                            title="Editar template"
-                          >
-                            <Pencil className="size-3.5" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="size-8 shrink-0 text-destructive"
-                            onClick={() => void deleteChatbotTemplate(template)}
-                            title="Excluir template"
-                          >
-                            <Trash2 className="size-3.5" />
-                          </Button>
-                        </div>
-                        <Button size="sm" className="mt-3 w-full gap-2" onClick={() => void addTemplateFromLibrary(template)}>
-                          <Plus className="size-3.5" /> Usar no fluxo
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="py-4 text-center text-xs text-muted-foreground">
-                    Nenhum template criado no Chatbot.
-                  </p>
-                )}
+              <div className="grid gap-3 p-3 sm:grid-cols-2">
+                {templates.map((template) => {
+                  const opts = template.chatbot_opcoes && typeof template.chatbot_opcoes === "object" ? template.chatbot_opcoes : {};
+                  return <div key={String(template.id)} className="flex min-h-44 flex-col rounded-xl border border-border bg-card p-3 shadow-sm">
+                    <div className="mb-2 flex items-start justify-between gap-2"><div className="min-w-0"><p className="truncate text-sm font-semibold">{String(template.titulo ?? "Modelo")}</p><p className="mt-1 text-[11px] text-muted-foreground">{opts.mode === "buttons" ? "Botões rápidos" : opts.mode === "list" ? "Lista interativa" : "Mensagem"}</p></div>
+                      <div className="flex shrink-0"><Button size="icon" variant="ghost" className="size-8" title="Editar modelo" onClick={() => editChatbotTemplate(template)}><Pencil className="size-3.5"/></Button><Button size="icon" variant="ghost" className="size-8 text-destructive" title="Excluir modelo" onClick={() => void deleteChatbotTemplate(template)}><Trash2 className="size-3.5"/></Button></div></div>
+                    {template.midia_url ? <div className="mb-2 flex items-center gap-2 rounded-lg bg-muted/50 p-2 text-xs text-muted-foreground"><ImageIcon className="size-4"/> Imagem anexada</div> : null}
+                    <p className="line-clamp-3 flex-1 whitespace-pre-wrap text-xs text-muted-foreground">{String(template.conteudo ?? "") || "Sem legenda"}</p>
+                    {Array.isArray(opts.items) && opts.items.length ? <div className="mt-3 flex flex-wrap gap-1">{opts.items.slice(0,3).map((item:any)=><Badge key={String(item.id)} variant="outline" className="text-[10px]">{String(item.label)}</Badge>)}{opts.items.length>3?<Badge variant="secondary">+{opts.items.length-3}</Badge>:null}</div>:null}
+                    <Button size="sm" variant="secondary" className="mt-3 w-full gap-2" onClick={() => void addTemplateFromLibrary(template)}><Plus className="size-3.5"/> Usar no fluxo</Button>
+                  </div>;
+                })}
+                {!templates.length ? <div className="col-span-full rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">Nenhum modelo criado ainda.</div> : null}
               </div>
             </div>
           ) : null}
+
+          <Dialog open={templateDialogOpen} onOpenChange={(open) => { if (!open && !creatingTemplate) resetTemplateEditor(); else setTemplateDialogOpen(open); }}>
+            <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
+              <DialogHeader><DialogTitle>{editingTemplateId ? "Editar modelo" : "Criar modelo"}</DialogTitle><DialogDescription>Configure o conteúdo e as opções que serão enviadas juntas no WhatsApp.</DialogDescription></DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2"><Label>Nome do modelo</Label><Input value={templateTitle} onChange={(e)=>setTemplateTitle(e.target.value)} placeholder="Ex.: Boas-vindas"/></div>
+                <div className="space-y-2"><Label>Texto / legenda</Label><Textarea value={templateContent} onChange={(e)=>setTemplateContent(e.target.value)} placeholder="Digite a mensagem que acompanhará a imagem..." rows={4}/><p className="text-[11px] text-muted-foreground">Formatação WhatsApp: *negrito*, _itálico_, ~riscado~.</p></div>
+                <div className="space-y-2 rounded-xl border border-border p-3"><Label>Imagem (opcional)</Label>
+                  {editingTemplateMediaPath && !templateImage ? <p className="text-xs text-muted-foreground">Imagem atual: {editingTemplateMediaName || "anexo"}</p> : null}
+                  <Input type="file" accept="image/*" disabled={creatingTemplate} onChange={(e)=>{const file=e.target.files?.[0]??null;if(file&&!file.type.startsWith("image/")){toast.error("Selecione uma imagem válida.");return;}setTemplateImage(file);}}/>
+                  {templateImage ? <p className="text-xs text-muted-foreground">{templateImage.name}</p> : null}
+                </div>
+                <div className="space-y-3 rounded-xl border border-border p-3">
+                  <div className="space-y-1"><Label>Opções interativas</Label><p className="text-xs text-muted-foreground">Escolha até 3 botões rápidos ou uma lista com até 10 itens.</p></div>
+                  <Select value={templateOptionMode} onValueChange={(v:any)=>{setTemplateOptionMode(v);setTemplateOptions(v==="none"?[]:templateOptions.length?templateOptions:[{id:uid("opt"),label:"",description:""}]);}}>
+                    <SelectTrigger><SelectValue placeholder="Tipo de opção"/></SelectTrigger><SelectContent><SelectItem value="none">Sem botões</SelectItem><SelectItem value="buttons">Botões rápidos (até 3)</SelectItem><SelectItem value="list">Lista (até 10)</SelectItem></SelectContent>
+                  </Select>
+                  {templateOptionMode !== "none" ? <>
+                    {templateOptions.map((item,index)=><div key={item.id} className="grid gap-2 rounded-lg bg-muted/30 p-2">
+                      <div className="flex gap-2"><Input value={item.label} placeholder={templateOptionMode==="buttons"?"Texto do botão":"Título da opção"} maxLength={templateOptionMode==="buttons"?20:24} onChange={(e)=>setTemplateOptions(current=>current.map((x,i)=>i===index?{...x,label:e.target.value}:x))}/><Button type="button" size="icon" variant="ghost" className="shrink-0 text-destructive" onClick={()=>setTemplateOptions(current=>current.filter((_,i)=>i!==index))}><Trash2 className="size-4"/></Button></div>
+                      {templateOptionMode==="list"?<Input value={item.description??""} placeholder="Descrição (opcional)" onChange={(e)=>setTemplateOptions(current=>current.map((x,i)=>i===index?{...x,description:e.target.value}:x))}/>:null}
+                    </div>)}
+                    <Button type="button" variant="outline" size="sm" disabled={templateOptions.length >= (templateOptionMode==="buttons"?3:10)} onClick={()=>setTemplateOptions(current=>[...current,{id:uid("opt"),label:"",description:""}])}><Plus className="mr-1 size-3.5"/> Adicionar opção</Button>
+                    {templateOptionMode==="list"?<><Input value={templateButtonText} onChange={(e)=>setTemplateButtonText(e.target.value)} placeholder="Texto para abrir a lista"/><Input value={templateSectionTitle} onChange={(e)=>setTemplateSectionTitle(e.target.value)} placeholder="Título da seção"/></>:null}
+                    <Input value={templateFooter} onChange={(e)=>setTemplateFooter(e.target.value)} placeholder="Rodapé (opcional)"/>
+                  </>:null}
+                </div>
+                <div className="flex justify-end gap-2"><Button type="button" variant="outline" onClick={resetTemplateEditor} disabled={creatingTemplate}>Cancelar</Button><Button type="button" disabled={creatingTemplate} onClick={()=>void saveChatbotTemplate()}>{creatingTemplate?<Loader2 className="mr-2 size-4 animate-spin"/>:<Save className="mr-2 size-4"/>}{creatingTemplate?"Salvando...":editingTemplateId?"Salvar alterações":"Criar modelo"}</Button></div>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           {sidebarTab === "respostas" ? (
             <div className="max-h-[665px] overflow-y-auto">
@@ -3121,7 +3043,7 @@ export function ChatbotPage() {
           ) : null}
         </aside>
 
-        <main className={`${sidebarTab === "typebot" ? "" : "hidden"} relative row-start-2 w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-border bg-card xl:col-start-2 xl:row-start-1`}>
+        <main className={`${sidebarTab === "typebot" ? "" : "hidden"} relative min-w-0 max-w-full flex-1 overflow-hidden rounded-xl border border-border bg-card`}>
           {!draft ? (
             <div className="flex h-full min-h-[650px] items-center justify-center p-8 text-center">
               <div>
@@ -4049,7 +3971,7 @@ export function ChatbotPage() {
           )}
         </main>
 
-        <aside className={`${sidebarTab === "comandos" && chatbotMode === "master" ? "row-start-2 min-w-0 max-w-full xl:col-start-2 xl:row-start-1" : "hidden"}`}>
+        <aside className={`${sidebarTab === "comandos" ? "row-start-2 min-w-0 max-w-full xl:col-start-2 xl:row-start-1" : "hidden"}`}>
           <section className="rounded-2xl border border-border bg-card p-4 md:p-5">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -5033,6 +4955,6 @@ export function ChatbotPage() {
       </div>
 
 
-    </>
+    </div>
   );
 }
