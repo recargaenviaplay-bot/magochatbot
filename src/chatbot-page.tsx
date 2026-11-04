@@ -68,7 +68,7 @@ export const Route = createFileRoute("/_authenticated/chatbot")({
   },
   head: () => ({
     meta: [
-      { title: "Chatbot — Gestor Nexos" },
+      { title: "BOTMG — Central de Chatbot" },
       { name: "description", content: "Construtor visual de automações do WhatsApp." },
     ],
   }),
@@ -305,7 +305,7 @@ function blankFlow(): FlowDraft {
 
 async function chatbotAdmin(action: string, payload: Record<string, unknown> = {}) {
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.access_token) throw new Error("Sua sessão expirou. Entre novamente no Gestor.");
+  if (!session?.access_token) throw new Error("Sua sessão expirou. Entre novamente no BOTMG.");
 
   const response = await fetch(CHATBOT_ADMIN_URL, {
     method: "POST",
@@ -330,7 +330,7 @@ async function chatbotAdmin(action: string, payload: Record<string, unknown> = {
 
 async function telegramAccountAction(action: string, payload: Record<string, unknown> = {}) {
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.access_token) throw new Error("Sua sessão expirou. Entre novamente no Gestor.");
+  if (!session?.access_token) throw new Error("Sua sessão expirou. Entre novamente no BOTMG.");
 
   const response = await fetch(TELEGRAM_ACCOUNT_URL, {
     method: "POST",
@@ -352,7 +352,7 @@ async function telegramAccountAction(action: string, payload: Record<string, unk
 
 async function uploadAsset(file: File, kind: "image" | "file") {
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.access_token) throw new Error("Sua sessão expirou. Entre novamente no Gestor.");
+  if (!session?.access_token) throw new Error("Sua sessão expirou. Entre novamente no BOTMG.");
 
   const form = new FormData();
   form.set("file", file);
