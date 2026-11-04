@@ -1834,12 +1834,22 @@ async function writeHistory(values: Record<string, unknown>) {
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ ok: false, error: "Método inválido." }, 405);
-  if (req.headers.get("x-nexos-chatbot") !== WEBHOOK_SECRET) {
+  const rawBody = await req.text();
+  const suppliedHmac = (req.headers.get("x-webhook-hmac") ?? "").trim().toLowerCase();
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw", encoder.encode(WEBHOOK_SECRET), { name: "HMAC", hash: "SHA-512" }, false, ["sign"]
+  );
+  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(rawBody));
+  const expectedHmac = Array.from(new Uint8Array(signature)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
+  const legacyHeader = req.headers.get("x-nexos-chatbot") ?? "";
+  if (suppliedHmac !== expectedHmac && legacyHeader !== WEBHOOK_SECRET) {
+    console.warn("[chatbot-webhook] autenticação rejeitada: assinatura ausente ou inválida");
     return json({ ok: false, error: "Webhook não autorizado." }, 401);
   }
 
   let body: any = null;
-  try { body = await req.json(); } catch { return json({ ok: true, ignored: "invalid-json" }); }
+  try { body = JSON.parse(rawBody); } catch { return json({ ok: true, ignored: "invalid-json" }); }
 
   try {
   const wahaSession=String(body?.session??body?.payload?.session??body?.data?.session??"").trim();
