@@ -452,7 +452,6 @@ export function ChatbotPage() {
   const [templateContent, setTemplateContent] = useState("");
   const [templateImage, setTemplateImage] = useState<File | null>(null);
   const [editingTemplateId, setEditingTemplateId] = useState("");
-  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [editingTemplateMediaPath, setEditingTemplateMediaPath] = useState("");
   const [editingTemplateMediaName, setEditingTemplateMediaName] = useState("");
   const [creatingTemplate, setCreatingTemplate] = useState(false);
@@ -1821,16 +1820,6 @@ export function ChatbotPage() {
     setEditingTemplateMediaName("");
   }
 
-  function openNewTemplate() {
-    resetTemplateEditor();
-    setTemplateDialogOpen(true);
-  }
-
-  function openEditTemplate(template: Row) {
-    editChatbotTemplate(template);
-    setTemplateDialogOpen(true);
-  }
-
   function editChatbotTemplate(template: Row) {
     setEditingTemplateId(String(template.id ?? ""));
     setTemplateTitle(String(template.titulo ?? ""));
@@ -1998,7 +1987,6 @@ export function ChatbotPage() {
       }
 
       resetTemplateEditor();
-      setTemplateDialogOpen(false);
     } catch (error) {
       if (uploadedPath) {
         await supabase.storage.from("mensagens-midia").remove([uploadedPath]).catch(() => undefined);
@@ -2944,60 +2932,28 @@ export function ChatbotPage() {
 
           {sidebarTab === "templates" ? (
             <div className="max-h-[665px] overflow-y-auto">
-              <div className="flex items-center justify-between gap-3 border-b border-border p-4">
-                <div className="min-w-0">
-                  <h2 className="font-semibold">Templates</h2>
-                  <p className="mt-1 text-xs text-muted-foreground">Crie templates exclusivos do Chatbot.</p>
-                </div>
-                <Button size="sm" className="shrink-0 gap-2" onClick={openNewTemplate}>
-                  <Plus className="size-3.5" /> Novo template
-                </Button>
+              <div className="border-b border-border p-4">
+                <h2 className="font-semibold">Templates</h2>
+                <p className="mt-1 text-xs text-muted-foreground">Crie templates exclusivos do Chatbot.</p>
               </div>
 
-              {templates.length > 0 ? (
-                <div className="grid gap-3 p-3 sm:grid-cols-2 xl:grid-cols-3">
-                  {templates.map((template) => (
-                    <div key={String(template.id)} className="flex flex-col rounded-md border border-border bg-background/20 p-3">
-                      <div className="flex items-start gap-2">
-                        <p className="min-w-0 flex-1 truncate text-sm font-semibold">{String(template.titulo ?? "Template")}</p>
-                        {String(template.midia_tipo ?? "") === "imagem" ? (
-                          <Badge variant="outline" className="shrink-0 text-[10px]">imagem</Badge>
-                        ) : null}
-                      </div>
-                      <p className="mt-2 line-clamp-3 min-h-[3.75rem] whitespace-pre-line text-xs text-muted-foreground">
-                        {String(template.conteudo ?? "") || "Sem texto"}
-                      </p>
-                      <div className="mt-3 flex items-center gap-2">
-                        <Button size="sm" className="h-8 flex-1 gap-1.5 text-xs" onClick={() => void addTemplateFromLibrary(template)}>
-                          <Plus className="size-3.5" /> Usar no fluxo
-                        </Button>
-                        <Button size="icon" variant="ghost" className="size-8 shrink-0" onClick={() => openEditTemplate(template)} title="Editar template">
-                          <Pencil className="size-3.5" />
-                        </Button>
-                        <Button size="icon" variant="ghost" className="size-8 shrink-0 text-destructive" onClick={() => void deleteChatbotTemplate(template)} title="Excluir template">
-                          <Trash2 className="size-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="py-10 text-center text-xs text-muted-foreground">Nenhum template criado no Chatbot.</p>
-              )}
-
-              <Dialog
-                open={templateDialogOpen}
-                onOpenChange={(open) => {
-                  if (creatingTemplate) return;
-                  setTemplateDialogOpen(open);
-                  if (!open) resetTemplateEditor();
-                }}
-              >
-                <DialogContent className="max-w-lg">
-                  <DialogHeader>
-                    <DialogTitle>{editingTemplateId ? "Editar template" : "Criar template"}</DialogTitle>
-                    <DialogDescription>Nome, mensagem e imagem opcional.</DialogDescription>
-                  </DialogHeader>
+              <div className="space-y-3 p-3">
+                <div className="rounded-md border border-border bg-background/20 p-3">
+                  <div className="mb-3 flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold">{editingTemplateId ? "Editar template" : "Criar template"}</p>
+                    {editingTemplateId ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-2 text-xs"
+                        disabled={creatingTemplate}
+                        onClick={resetTemplateEditor}
+                      >
+                        Cancelar
+                      </Button>
+                    ) : null}
+                  </div>
                   <div className="space-y-2">
                     <Input
                       value={templateTitle}
@@ -3083,8 +3039,49 @@ export function ChatbotPage() {
                           : "Criar template"}
                     </Button>
                   </div>
-                </DialogContent>
-              </Dialog>
+                </div>
+
+                {templates.length > 0 ? (
+                  <div className="space-y-2">
+                    <p className="px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Templates criados</p>
+                    {templates.map((template) => (
+                      <div key={String(template.id)} className="rounded-md border border-border bg-background/20 p-3">
+                        <div className="flex items-center gap-2">
+                          <p className="min-w-0 flex-1 truncate text-sm font-semibold">{String(template.titulo ?? "Template")}</p>
+                          {String(template.midia_tipo ?? "") === "imagem" ? (
+                            <Badge variant="outline" className="shrink-0 text-[10px]">imagem</Badge>
+                          ) : null}
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="size-8 shrink-0"
+                            onClick={() => editChatbotTemplate(template)}
+                            title="Editar template"
+                          >
+                            <Pencil className="size-3.5" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="size-8 shrink-0 text-destructive"
+                            onClick={() => void deleteChatbotTemplate(template)}
+                            title="Excluir template"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </div>
+                        <Button size="sm" className="mt-3 w-full gap-2" onClick={() => void addTemplateFromLibrary(template)}>
+                          <Plus className="size-3.5" /> Usar no fluxo
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="py-4 text-center text-xs text-muted-foreground">
+                    Nenhum template criado no Chatbot.
+                  </p>
+                )}
+              </div>
             </div>
           ) : null}
 
